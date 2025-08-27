@@ -3,11 +3,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Queue<E> {
-    public LinkedList processes;
+    public LinkedList transferencias;
     private int size;
 
     public Queue() {
-        this.processes = new LinkedList();
+        this.transferencias = new LinkedList();
         this.size = 0;
     }
 
@@ -41,15 +41,15 @@ public class Queue<E> {
 
                 Node newNode = new Node(Data);
                 
-                if (this.processes.firstNode == null) {
-                    this.processes.firstNode = newNode;
-                    this.processes.firstNode.setTail(newNode);
+                if (this.transferencias.firstNode == null) {
+                    this.transferencias.firstNode = newNode;
+                    this.transferencias.firstNode.setTail(newNode);
                 } else {
                     // Find the current tail (last element)
-                    Node currentTail = this.processes.firstNode.tail;
+                    Node currentTail = this.transferencias.firstNode.tail;
                     if (currentTail == null) {
                         // Fallback: traverse to find tail
-                        currentTail = this.processes.firstNode;
+                        currentTail = this.transferencias.firstNode;
                         while (currentTail.next != null) {
                             currentTail = currentTail.next;
                         }
@@ -58,7 +58,7 @@ public class Queue<E> {
                     // Add new node at the end
                     currentTail.setNext(newNode);
                     newNode.setLast(currentTail);
-                    this.processes.firstNode.setTail(newNode);
+                    this.transferencias.firstNode.setTail(newNode);
                 }
                 this.size++;
                 x = false;
@@ -75,20 +75,20 @@ public class Queue<E> {
             throw new Exception("La Cola esta vacia");
         }
 
-        String result = this.processes.firstNode.Data.toString();
+        String result = this.transferencias.firstNode.Data.toString();
 
-        Node oldFirst = this.processes.firstNode;
+        Node oldFirst = this.transferencias.firstNode;
         Node newFirst = oldFirst.next;
 
         if (newFirst == null) {
-            this.processes.firstNode = null;
+            this.transferencias.firstNode = null;
         } else {
             oldFirst.setNext(null);
             oldFirst.setHead(null);
             newFirst.setLast(null);
             newFirst.setHead(newFirst);
             newFirst.setTail(oldFirst.tail != null ? oldFirst.tail : newFirst.tail);
-            this.processes.firstNode = newFirst;
+            this.transferencias.firstNode = newFirst;
         }
 
         this.size--;
@@ -104,7 +104,7 @@ public class Queue<E> {
         if (this.isEmpty()){
             throw new Exception("La Cola esta vacia");
         }
-        return this.processes.firstNode.getData().toString();
+        return this.transferencias.firstNode.getData().toString();
     }
 
     /**
@@ -117,7 +117,7 @@ public class Queue<E> {
         }
         
         System.out.println("Procesos en la cola:");
-        Node current = this.processes.firstNode;
+        Node current = this.transferencias.firstNode;
         int position = 1;
         
         while (current != null) {
@@ -139,7 +139,7 @@ public class Queue<E> {
      * Elimina todos los elementos de la cola y reinicia su tamaño a 0.
      */
     public void clear() {
-        this.processes.firstNode = null;
+        this.transferencias.firstNode = null;
         this.size = 0;
     }
 }

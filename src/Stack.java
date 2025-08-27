@@ -7,11 +7,11 @@ import java.io.InputStreamReader;
  * Permite apilar comandos con {@link #push()}, desapilar con {@link #pop()} y consultar con {@link #peek()}.
  */
 public class Stack<E> {
-    public LinkedList commands;
+    public LinkedList historial;
     private int size;
     
     public Stack(){
-        this.commands = new LinkedList();
+        this.historial = new LinkedList();
         this.size = 0;
     }
 
@@ -39,16 +39,16 @@ public class Stack<E> {
     public void push(String Data) throws IOException {
         Node newNode = new Node(Data);
 
-        if (this.commands.firstNode == null) {
+        if (this.historial.firstNode == null) {
             // First element
-            this.commands.firstNode = newNode;
-            this.commands.firstNode.setTail(newNode);
+            this.historial.firstNode = newNode;
+            this.historial.firstNode.setTail(newNode);
         } else {
             // Find the current tail (last element)
-            Node currentTail = this.commands.firstNode.tail;
+            Node currentTail = this.historial.firstNode.tail;
             if (currentTail == null) {
                 // Fallback: traverse to find tail
-                currentTail = this.commands.firstNode;
+                currentTail = this.historial.firstNode;
                 while (currentTail.next != null) {
                     currentTail = currentTail.next;
                 }
@@ -57,7 +57,7 @@ public class Stack<E> {
             // Add new node at the end (for stack, this becomes the new top)
             currentTail.setNext(newNode);
             newNode.setLast(currentTail);
-            this.commands.firstNode.setTail(newNode);
+            this.historial.firstNode.setTail(newNode);
         }
         this.size++;
     }
@@ -73,23 +73,23 @@ public class Stack<E> {
             throw new Exception("La Pila esta Vacia");
         }
         // El stack debe eliminar el último elemento insertado (tail)
-        Node tail = this.commands.firstNode.tail;
+        Node tail = this.historial.firstNode.tail;
         // Fallback si por alguna razón no está seteada la cola
         if (tail == null) {
-            tail = this.commands.firstNode;
+            tail = this.historial.firstNode;
             while (tail.next != null) {
                 tail = tail.next;
             }
         }
 
-        if (tail == this.commands.firstNode) {
-            this.commands.setFirstNode(null);
+        if (tail == this.historial.firstNode) {
+            this.historial.setFirstNode(null);
         } else {
             Node prev = tail.last;
             if (prev != null) {
                 prev.setNext(null);
             }
-            this.commands.firstNode.setTail(prev);
+            this.historial.firstNode.setTail(prev);
             tail.setLast(null);
             tail.setNext(null);
         }
@@ -108,6 +108,6 @@ public class Stack<E> {
         if (this.isEmpty()){
             throw new Exception("La Pila esta vacia");
         }
-        return this.commands.firstNode.getData().toString();
+        return this.historial.firstNode.getData().toString();
     }
 }
