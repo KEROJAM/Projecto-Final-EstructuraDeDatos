@@ -104,10 +104,38 @@ public class Stack<E> {
      * @return representación en String del elemento
      * @throws Exception si la pila está vacía
      */
-    public String peek() throws Exception{
-        if (this.isEmpty()){
+    public String peek() throws Exception {
+        if (this.isEmpty()) {
             throw new Exception("La Pila esta vacia");
         }
-        return this.historial.firstNode.getData().toString();
+        Node tail = this.historial.firstNode.tail;
+        if (tail == null) {
+            // Fallback: recorrer hasta el final
+            tail = this.historial.firstNode;
+            while (tail.next != null) {
+                tail = tail.next;
+            }
+        }
+        return tail.getData().toString();
+    }
+    public void showAll() {
+        if (this.isEmpty()) {
+            System.out.println("│ No hay movimientos      │");
+            return;
+        }
+
+        Node tail = this.historial.firstNode.tail;
+        if (tail == null) {
+            // Fallback: recorrer hasta el final
+            tail = this.historial.firstNode;
+            while (tail.next != null) {
+                tail = tail.next;
+            }
+        }
+
+        while (tail != null) {
+            System.out.println("│ - " + tail.getData() + " │");
+            tail = tail.last;
+        }
     }
 }

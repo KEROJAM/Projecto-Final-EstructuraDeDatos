@@ -130,19 +130,14 @@ public class Main {
                         pause(reader);
                         break;
 
-                    case 4:
+                    case 4: // HISTORIAL
                         System.out.println("\n┌─────── HISTORIAL ───────┐");
                         System.out.println("│ Últimos movimientos:    │");
-                        if (pilaHistorial.isEmpty()) {
-                            System.out.println("│ No hay movimientos      │");
-                        } else {
-                            // Mostrar historial en orden inverso (más reciente primero)
-                            System.out.println("│ - " + pilaHistorial.peek() + "       │");
-                        }
+                        pilaHistorial.showAll();
                         System.out.println("└─────────────────────────┘");
                         pause(reader);
                         break;
-
+                        
                     case 5:
                         System.out.println("\n┌─────────────────────────┐");
                         System.out.println("│  Sesión cerrada con éxito │");
