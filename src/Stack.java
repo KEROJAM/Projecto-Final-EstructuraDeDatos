@@ -36,41 +36,30 @@ public class Stack<E> {
      * El dato se lee de la entrada estándar y se guarda como String en un {@link Node}.
      * @throws IOException si falla la lectura de la entrada
      */
-    public void push() throws IOException {
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("| Para salir Introduzca exit");
-        boolean x = true;
-        while (x) {
-            System.out.print("| [usuario@computadora:~]$ ");
-            String Data = input.readLine();
-            if (Data.equalsIgnoreCase("exit")){
-                x = false;
-            } else {
-                Node newNode = new Node(Data);
-                
-                if (this.commands.firstNode == null) {
-                    // First element
-                    this.commands.firstNode = newNode;
-                    this.commands.firstNode.setTail(newNode);
-                } else {
-                    // Find the current tail (last element)
-                    Node currentTail = this.commands.firstNode.tail;
-                    if (currentTail == null) {
-                        // Fallback: traverse to find tail
-                        currentTail = this.commands.firstNode;
-                        while (currentTail.next != null) {
-                            currentTail = currentTail.next;
-                        }
-                    }
-                    
-                    // Add new node at the end (for stack, this becomes the new top)
-                    currentTail.setNext(newNode);
-                    newNode.setLast(currentTail);
-                    this.commands.firstNode.setTail(newNode);
+    public void push(String Data) throws IOException {
+        Node newNode = new Node(Data);
+
+        if (this.commands.firstNode == null) {
+            // First element
+            this.commands.firstNode = newNode;
+            this.commands.firstNode.setTail(newNode);
+        } else {
+            // Find the current tail (last element)
+            Node currentTail = this.commands.firstNode.tail;
+            if (currentTail == null) {
+                // Fallback: traverse to find tail
+                currentTail = this.commands.firstNode;
+                while (currentTail.next != null) {
+                    currentTail = currentTail.next;
                 }
-                this.size++;
             }
+
+            // Add new node at the end (for stack, this becomes the new top)
+            currentTail.setNext(newNode);
+            newNode.setLast(currentTail);
+            this.commands.firstNode.setTail(newNode);
         }
+        this.size++;
     }
 
     /**

@@ -26,7 +26,7 @@ public class LinkedList {
         switch (FlowList) {
             case "-->":
                 if (firstNode == null) {
-                    System.out.println("El historial de procesos esta vacio");
+                    System.out.println("El historial de movimientos esta vacio");
                 } else {
                     Node currNode = this.firstNode;
                     while (currNode != null) {
@@ -41,7 +41,7 @@ public class LinkedList {
                 break;
             case "<--":
                 if (firstNode == null) {
-                    System.out.println("El historial de commandos esta vacio");
+                    System.out.println("El historial de movimientos esta vacio");
                     return;
                 }
                 Node temp = this.firstNode.tail;

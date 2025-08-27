@@ -36,7 +36,7 @@ public class Queue<E> {
         BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
         boolean x = true;
         while (x) {
-            System.out.print("| Ingrese el ");
+            System.out.print("| Ingrese el monto: ");
             String Data = input.readLine();
 
                 Node newNode = new Node(Data);
