@@ -4,7 +4,7 @@ import java.io.InputStreamReader;
 
 /**
  * Implementación de una pila (LIFO) genérica basada en {@link LinkedList}.
- * Permite apilar comandos con {@link #push()}, desapilar con {@link #pop()} y consultar con {@link #peek()}.
+ * Permite apilar comandos con {@link #()}, desapilar con {@link #pop()} y consultar con {@link #peek()}.
  */
 public class Stack<E> {
     public LinkedList historial;
