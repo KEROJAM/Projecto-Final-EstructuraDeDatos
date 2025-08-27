@@ -35,13 +35,10 @@ public class Queue<E> {
     public void enqueue() throws IOException {
         BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
         boolean x = true;
-        System.out.println("| Para salir Introduzca exit");
         while (x) {
-            System.out.print("| [usuario@computadora:~]$ ");
+            System.out.print("| Ingrese el ");
             String Data = input.readLine();
-            if (Data.equalsIgnoreCase("exit")){
-                x = false;
-            } else {
+
                 Node newNode = new Node(Data);
                 
                 if (this.processes.firstNode == null) {
@@ -64,7 +61,7 @@ public class Queue<E> {
                     this.processes.firstNode.setTail(newNode);
                 }
                 this.size++;
-            }
+                x = false;
         }
     }
 
