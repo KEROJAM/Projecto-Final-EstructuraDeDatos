@@ -1,5 +1,5 @@
 // Archivo: Main.java (modificado)
-public class Main {
+public class Main{
     public static void main(String[] args) {
         // Datos iniciales del banco
         String nombreBanco = "";
@@ -99,12 +99,12 @@ public class Main {
 
                 // Encabezado del banco
                 System.out.println("┌──────────────────────────────────┐");
-                System.out.println("│           " + nombreBanco + "           │");
+                System.out.println("│       ✦ BANCO FINANCIERO ✦       │");
                 System.out.println("├──────────────────────────────────┤");
                 System.out.println("│ Cliente: " + String.format("%-20s", clienteSesion.Nombre) + "│");
                 System.out.printf ("│ Saldo: $%-23d │\n", clienteSesion.Monto);
                 System.out.println("├──────────────────────────────────┤");
-                System.out.println("│ 1. 💰  Realizar depósito         │");
+                System.out.println("│ 1. 💰  Realizar depósito          │");
                 System.out.println("│ 2. 💸  Retirar monto             │");
                 System.out.println("│ 3. 🔄  Transferir                │");
                 System.out.println("│ 4.     Realizar Tranferencias    │");
@@ -149,15 +149,9 @@ public class Main {
                         System.out.print("│ Monto a transferir: ");
                         int montoTransferencia = Integer.parseInt(reader.readLine());
 
-<<<<<<< HEAD
-                        if (montoTransferencia <= cliente.Monto) {
-                            cliente.Transferir(montoTransferencia);
-                            colaTransferencias.enqueue(montoTransferencia);
-=======
                         if (montoTransferencia <= clienteSesion.Monto) {
-                            clienteSesion.Monto -= montoTransferencia;
-                            pilaHistorial.push("Transferencia: -$" + montoTransferencia + " a ID:" + idDestinatario);
->>>>>>> origin/main
+                            clienteSesion.Transferir(montoTransferencia);
+                            colaTransferencias.enqueue(montoTransferencia);
                             System.out.println("│ Transferencia realizada ✓   │");
                         } else {
                             System.out.println("│ Fondos insuficientes! ❌    │");
@@ -180,13 +174,7 @@ public class Main {
                         System.out.println("└─────────────────────────┘");
                         pause(reader);
                         break;
-<<<<<<< HEAD
-                        
                     case 6:
-=======
-
-                    case 5:
->>>>>>> origin/main
                         System.out.println("\n┌─────────────────────────┐");
                         System.out.println("│  Sesión cerrada con éxito │");
                         System.out.println("│   ¡Vuelva pronto! ✨      │");
