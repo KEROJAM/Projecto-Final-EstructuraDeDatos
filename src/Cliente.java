@@ -12,7 +12,7 @@ public class Cliente {
         this.Monto += Monto;
     }
 
-    public void Transferir(int Monto, Cliente ID){
+    public void Transferir(int Monto){
         this.Monto -= Monto;
     }
 }

@@ -32,14 +32,8 @@ public class Queue<E> {
      * y se almacena como String dentro de un {@link Node}.
      * @throws IOException si ocurre un error al leer desde la entrada
      */
-    public void enqueue() throws IOException {
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        boolean x = true;
-        while (x) {
-            System.out.print("| Ingrese el monto: ");
-            String Data = input.readLine();
-
-                Node newNode = new Node(Data);
+    public void enqueue(int Monto) throws IOException {
+                Node newNode = new Node(Monto);
                 
                 if (this.transferencias.firstNode == null) {
                     this.transferencias.firstNode = newNode;
@@ -61,8 +55,6 @@ public class Queue<E> {
                     this.transferencias.firstNode.setTail(newNode);
                 }
                 this.size++;
-                x = false;
-        }
     }
 
     /**

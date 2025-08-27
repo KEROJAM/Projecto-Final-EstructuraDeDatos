@@ -1,7 +1,7 @@
 public class Main {
     public static void main(String[] args) {
         // Datos iniciales del banco
-        String nombreBanco = "✦ BANCO FINANCIERO ✦";
+        String nombreBanco = "";
         int montoInicial = 5000;
         int opcion;
         boolean salir = false;
@@ -24,9 +24,9 @@ public class Main {
                 clearConsole();
 
                 System.out.println("┌──────────────────────────────────┐");
-                System.out.println("│        " + nombreBanco + "        │");
+                System.out.println("│       ✦ BANCO FINANCIERO ✦       │");
                 System.out.println("├──────────────────────────────────┤");
-                System.out.println("│        INICIO DE SESIÓN          │");
+                System.out.println("│         INICIO DE SESIÓN         │");
                 System.out.println("├──────────────────────────────────┤");
                 System.out.print("│ Nombre: ");
                 nombreUsuario = reader.readLine();
@@ -78,8 +78,9 @@ public class Main {
                 System.out.println("│ 1. 💰  Realizar depósito         │");
                 System.out.println("│ 2. 💸  Retirar monto             │");
                 System.out.println("│ 3. 🔄  Transferir                │");
-                System.out.println("│ 4. 📋  Historial de movimientos  │");
-                System.out.println("│ 5. 🚪  Cerrar sesión             │");
+                System.out.println("│ 4.     Realizar Tranferencias    │");
+                System.out.println("│ 5. 📋  Historial de movimientos  │");
+                System.out.println("│ 6. 🚪  Cerrar sesión             │");
                 System.out.println("└──────────────────────────────────┘");
                 System.out.print("Seleccione opción: ");
 
@@ -120,8 +121,8 @@ public class Main {
                         int montoTransferencia = Integer.parseInt(reader.readLine());
 
                         if (montoTransferencia <= cliente.Monto) {
-                            cliente.Monto -= montoTransferencia;
-                            pilaHistorial.push("Transferencia: -$" + montoTransferencia + " a ID:" + idDestinatario);
+                            cliente.Transferir(montoTransferencia);
+                            colaTransferencias.enqueue(montoTransferencia);
                             System.out.println("│ Transferencia realizada ✓   │");
                         } else {
                             System.out.println("│ Fondos insuficientes! ❌    │");
@@ -129,8 +130,15 @@ public class Main {
                         System.out.println("└──────────────────────────────┘");
                         pause(reader);
                         break;
-
-                    case 4: // HISTORIAL
+                    case 4:
+                        System.out.println("\n┌───────── TRANSFERENCIA ──────┐");
+                        colaTransferencias.transferencias.printList("-->");
+                        System.out.print("│ Realizar Transferencia? :");
+                        String processarTransferencia = reader.readLine();
+                        pilaHistorial.push(colaTransferencias.dequeue());
+                        System.out.println("└─────────────────────────┘");
+                        break;
+                    case 5: // HISTORIAL
                         System.out.println("\n┌─────── HISTORIAL ───────┐");
                         System.out.println("│ Últimos movimientos:    │");
                         pilaHistorial.showAll();
@@ -138,7 +146,7 @@ public class Main {
                         pause(reader);
                         break;
                         
-                    case 5:
+                    case 6:
                         System.out.println("\n┌─────────────────────────┐");
                         System.out.println("│  Sesión cerrada con éxito │");
                         System.out.println("│   ¡Vuelva pronto! ✨      │");
