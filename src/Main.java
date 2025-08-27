@@ -14,7 +14,7 @@ public class Main {
         HashTable clientesTable = new HashTable(10);
 
         // Agregar 5 clientes predefinidos
-        agregarCliente(clientesTable, 1, "Juan Perez", 7500, "5204166213481296");
+        agregarCliente(clientesTable, 1, "Juan Perez", 7500, "0078060500701971");
         agregarCliente(clientesTable, 2, "Maria Garcia", 12000, "8765432187654321");
         agregarCliente(clientesTable, 3, "Carlos Lopez", 3500, "1111222233334444");
         agregarCliente(clientesTable, 4, "Ana Rodriguez", 9800, "5555666677778888");
