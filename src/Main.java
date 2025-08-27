@@ -14,11 +14,11 @@ public class Main{
         HashTable clientesTable = new HashTable(10);
 
         // Agregar 5 clientes predefinidos
-        agregarCliente(clientesTable, 1, "Juan Perez", 7500, "0078060500701971");
-        agregarCliente(clientesTable, 2, "Maria Garcia", 12000, "8765432187654321");
+        agregarCliente(clientesTable, 1, "Juan Perez", 7500, "5201169781530257");
+        agregarCliente(clientesTable, 2, "Maria Garcia", 12000, "4509297861614535");
         agregarCliente(clientesTable, 3, "Carlos Lopez", 3500, "4555061037596247");
-        agregarCliente(clientesTable, 4, "Ana Rodriguez", 9800, "5555666677778888");
-        agregarCliente(clientesTable, 5, "Pedro Martinez", 15000, "9999888877776666");
+        agregarCliente(clientesTable, 4, "Ana Rodriguez", 9800, "4915762317479773");
+        agregarCliente(clientesTable, 5, "Pedro Martinez", 15000, "5161034964107141");
 
         // Crear instancia de cliente para la sesión actual
         Cliente clienteSesion = new Cliente();
