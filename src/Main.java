@@ -1,6 +1,7 @@
 public class Main {
     public static void main(String[] args) {
         // Datos iniciales del banco
+        //0078060500701971 TDC
         String nombreBanco = "✦ BANCO FINANCIERO ✦";
         int montoInicial = 5000;
         int opcion;
