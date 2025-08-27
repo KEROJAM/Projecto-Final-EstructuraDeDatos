@@ -11,4 +11,8 @@ public class Cliente {
     public void Depositar(int Monto){
         this.Monto += Monto;
     }
+
+    public void Transferir(int Monto, Cliente ID){
+        this.Monto -= Monto;
+    }
 }
