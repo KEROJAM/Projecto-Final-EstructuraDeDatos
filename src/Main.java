@@ -26,7 +26,7 @@ public class Main {
                 System.out.println("┌──────────────────────────────────┐");
                 System.out.println("│        " + nombreBanco + "        │");
                 System.out.println("├──────────────────────────────────┤");
-                System.out.println("│        INICIO DE SESIÓN         │");
+                System.out.println("│        INICIO DE SESIÓN          │");
                 System.out.println("├──────────────────────────────────┤");
                 System.out.print("│ Nombre: ");
                 nombreUsuario = reader.readLine();
