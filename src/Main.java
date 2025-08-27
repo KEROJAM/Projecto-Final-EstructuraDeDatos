@@ -16,7 +16,7 @@ public class Main {
         // Agregar 5 clientes predefinidos
         agregarCliente(clientesTable, 1, "Juan Perez", 7500, "0078060500701971");
         agregarCliente(clientesTable, 2, "Maria Garcia", 12000, "8765432187654321");
-        agregarCliente(clientesTable, 3, "Carlos Lopez", 3500, "1111222233334444");
+        agregarCliente(clientesTable, 3, "Carlos Lopez", 3500, "4555061037596247");
         agregarCliente(clientesTable, 4, "Ana Rodriguez", 9800, "5555666677778888");
         agregarCliente(clientesTable, 5, "Pedro Martinez", 15000, "9999888877776666");
 
