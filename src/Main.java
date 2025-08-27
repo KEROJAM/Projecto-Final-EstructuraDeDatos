@@ -1,7 +1,7 @@
+// Archivo: Main.java (modificado)
 public class Main {
     public static void main(String[] args) {
         // Datos iniciales del banco
-        //0078060500701971 TDC
         String nombreBanco = "✦ BANCO FINANCIERO ✦";
         int montoInicial = 5000;
         int opcion;
@@ -10,9 +10,18 @@ public class Main {
         String nombreUsuario = "";
         String tarjetaUsuario = "";
 
-        // Crear instancias necesarias
-        Cliente cliente = new Cliente();
-        cliente.Monto = montoInicial;
+        // Crear tabla hash con clientes predefinidos
+        HashTable clientesTable = new HashTable(10);
+
+        // Agregar 5 clientes predefinidos
+        agregarCliente(clientesTable, 1, "Juan Perez", 7500, "5204166213481296");
+        agregarCliente(clientesTable, 2, "Maria Garcia", 12000, "8765432187654321");
+        agregarCliente(clientesTable, 3, "Carlos Lopez", 3500, "1111222233334444");
+        agregarCliente(clientesTable, 4, "Ana Rodriguez", 9800, "5555666677778888");
+        agregarCliente(clientesTable, 5, "Pedro Martinez", 15000, "9999888877776666");
+
+        // Crear instancia de cliente para la sesión actual
+        Cliente clienteSesion = new Cliente();
         Stack<String> pilaHistorial = new Stack<>();
         Queue<String> colaTransferencias = new Queue<>();
 
@@ -35,19 +44,38 @@ public class Main {
                 System.out.print("│ Nº Tarjeta (16 dígitos): ");
                 tarjetaUsuario = reader.readLine();
 
-                // Validar tarjeta
+                // Validar tarjeta con algoritmo de Luhn
                 if (ValidadorTarjeta.validarTarjeta(tarjetaUsuario)) {
-                    String tipoTarjeta = ValidadorTarjeta.obtenerTipoTarjeta(tarjetaUsuario);
-                    String tarjetaEnmascarada = ValidadorTarjeta.enmascararTarjeta(tarjetaUsuario);
+                    // Verificar en la tabla hash si la tarjeta pertenece al usuario
+                    Cliente clienteEncontrado = clientesTable.get(tarjetaUsuario);
 
-                    System.out.println("├──────────────────────────────────┤");
-                    System.out.println("│ Tarjeta " + tipoTarjeta + " válida ✓       │");
-                    System.out.println("│ " + tarjetaEnmascarada + "         │");
-                    System.out.println("└──────────────────────────────────┘");
-                    System.out.print("Presione Enter para continuar...");
-                    reader.readLine();
+                    if (clienteEncontrado != null && clienteEncontrado.validarTarjetaYNombre(tarjetaUsuario, nombreUsuario)) {
+                        String tipoTarjeta = ValidadorTarjeta.obtenerTipoTarjeta(tarjetaUsuario);
+                        String tarjetaEnmascarada = ValidadorTarjeta.enmascararTarjeta(tarjetaUsuario);
 
-                    sesionIniciada = true;
+                        // Copiar los datos del cliente encontrado al cliente de la sesión
+                        clienteSesion.ID = clienteEncontrado.ID;
+                        clienteSesion.Nombre = clienteEncontrado.Nombre;
+                        clienteSesion.Monto = clienteEncontrado.Monto;
+                        clienteSesion.NumeroTarjeta = clienteEncontrado.NumeroTarjeta;
+
+                        System.out.println("├──────────────────────────────────┤");
+                        System.out.println("│ Tarjeta " + tipoTarjeta + " válida ✓       │");
+                        System.out.println("│ " + tarjetaEnmascarada + "         │");
+                        System.out.println("│ Bienvenido: " + String.format("%-15s", clienteEncontrado.Nombre) + "│");
+                        System.out.println("└──────────────────────────────────┘");
+                        System.out.print("Presione Enter para continuar...");
+                        reader.readLine();
+
+                        sesionIniciada = true;
+                    } else {
+                        System.out.println("├──────────────────────────────────┤");
+                        System.out.println("│  Tarjeta no pertenece al usuario │");
+                        System.out.println("│      o usuario no existe! ❌     │");
+                        System.out.println("└──────────────────────────────────┘");
+                        System.out.print("Presione Enter para intentar nuevamente...");
+                        reader.readLine();
+                    }
                 } else {
                     System.out.println("├──────────────────────────────────┤");
                     System.out.println("│    Tarjeta inválida! ❌         │");
@@ -73,8 +101,8 @@ public class Main {
                 System.out.println("┌──────────────────────────────────┐");
                 System.out.println("│           " + nombreBanco + "           │");
                 System.out.println("├──────────────────────────────────┤");
-                System.out.println("│ Cliente: " + String.format("%-20s", nombreUsuario) + "│");
-                System.out.printf ("│ Saldo: $%-23d │\n", cliente.Monto);
+                System.out.println("│ Cliente: " + String.format("%-20s", clienteSesion.Nombre) + "│");
+                System.out.printf ("│ Saldo: $%-23d │\n", clienteSesion.Monto);
                 System.out.println("├──────────────────────────────────┤");
                 System.out.println("│ 1. 💰  Realizar depósito         │");
                 System.out.println("│ 2. 💸  Retirar monto             │");
@@ -91,7 +119,7 @@ public class Main {
                         System.out.println("\n┌────────── DEPÓSITO ──────────┐");
                         System.out.print("│ Ingrese monto: ");
                         int montoDeposito = Integer.parseInt(reader.readLine());
-                        cliente.Depositar(montoDeposito);
+                        clienteSesion.Depositar(montoDeposito);
                         pilaHistorial.push("Depósito: +$" + montoDeposito);
                         System.out.println("│ Depósito realizado ✓        │");
                         System.out.println("└──────────────────────────────┘");
@@ -102,8 +130,8 @@ public class Main {
                         System.out.println("\n┌────────── RETIRO ────────────┐");
                         System.out.print("│ Ingrese monto: ");
                         int montoRetiro = Integer.parseInt(reader.readLine());
-                        if (montoRetiro <= cliente.Monto) {
-                            cliente.Monto -= montoRetiro;
+                        if (montoRetiro <= clienteSesion.Monto) {
+                            clienteSesion.Monto -= montoRetiro;
                             pilaHistorial.push("Retiro: -$" + montoRetiro);
                             System.out.println("│ Retiro realizado ✓          │");
                         } else {
@@ -120,8 +148,8 @@ public class Main {
                         System.out.print("│ Monto a transferir: ");
                         int montoTransferencia = Integer.parseInt(reader.readLine());
 
-                        if (montoTransferencia <= cliente.Monto) {
-                            cliente.Monto -= montoTransferencia;
+                        if (montoTransferencia <= clienteSesion.Monto) {
+                            clienteSesion.Monto -= montoTransferencia;
                             pilaHistorial.push("Transferencia: -$" + montoTransferencia + " a ID:" + idDestinatario);
                             System.out.println("│ Transferencia realizada ✓   │");
                         } else {
@@ -138,7 +166,7 @@ public class Main {
                         System.out.println("└─────────────────────────┘");
                         pause(reader);
                         break;
-                        
+
                     case 5:
                         System.out.println("\n┌─────────────────────────┐");
                         System.out.println("│  Sesión cerrada con éxito │");
@@ -169,7 +197,13 @@ public class Main {
         }
     }
 
-    // Método para limpiar la consola
+    // Método auxiliar para agregar clientes sin duplicar el número de tarjeta
+    private static void agregarCliente(HashTable tabla, int id, String nombre, int monto, String numeroTarjeta) {
+        Cliente cliente = new Cliente(id, nombre, monto, numeroTarjeta);
+        tabla.put(numeroTarjeta, cliente);
+    }
+
+    // Métodos clearConsole() y pause() permanecen igual...
     private static void clearConsole() {
         try {
             if (System.getProperty("os.name").contains("Windows")) {
@@ -183,7 +217,6 @@ public class Main {
         }
     }
 
-    // Método para pausar la ejecución
     private static void pause(java.io.BufferedReader reader) {
         try {
             System.out.print("Presione Enter para continuar...");
