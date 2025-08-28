@@ -1,12 +1,18 @@
 # Avance Projecto Final 
 ## Sistema de Banco
-Menu 
--Preguntar los 16 digitos del numero de tarjeta
+Este proyecto desarrolla un sistema de manejo de transferencias, depositos, retiros y ver el historial de movimientos, el cual utiliza estructuras de datos como: Pila, Cola, Nodo y Listas enlazadas para gestionar las transacciones y ver el historial de movimientos
 
-Transferencias 
-Ver Movimientos
-Realizar pago (Preguntar tdc y cuánto va a depositar) 
-Generar NIP
+
+### Funcionalidades
+- Preguntar los 16 digitos del numero de tarjeta
+- Transferencias 
+- Ver Movimientos
+- Realizar pago *(Preguntar tdc y cuánto va a depositar)* 
+- Generar NIP
+
+### Prerrequisitos 
+- JDK (Java Development Kit) 8 o superior 
+- Terminal/Linea de comandos
 
 ### Pasos de Compilacion
 1. Navegar al directorio del proyecto:
