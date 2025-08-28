@@ -124,6 +124,12 @@ public class Main{
                         System.out.println("   ╠══════════════════════════════╣");
                         System.out.print("   ║ Ingrese monto: ");
                         int montoDeposito = Integer.parseInt(reader.readLine());
+                        if(montoDeposito <= 0){
+                            System.out.println("   ║        Valor invalido        ║");
+                            System.out.println("   ╚══════════════════════════════╝");
+                            sleep(1500);
+                            continue;
+                        }
                         clienteSesion.Depositar(montoDeposito);
                         pilaHistorial.push("Deposito: +$" + montoDeposito);
                         System.out.println("   ║ Deposito realizado          ");

@@ -120,7 +120,7 @@ public class Stack<E> {
     }
     public void showAll() {
         if (this.isEmpty()) {
-            System.out.println("│ No hay movimientos      │");
+            System.out.println("   ║ No hay movimientos      ");
             return;
         }
 
