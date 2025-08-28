@@ -2,8 +2,6 @@
 public class Main{
     public static void main(String[] args) {
         // Datos iniciales del banco
-        String nombreBanco = "";
-        int montoInicial = 5000;
         int opcion;
         boolean salir = false;
         boolean sesionIniciada = false;
@@ -33,15 +31,17 @@ public class Main{
             try {
                 clearConsole();
 
-                System.out.println("┌──────────────────────────────────┐");
-                System.out.println("│       ✦ BANCO FINANCIERO ✦       │");
+                System.out.println("╭──────────────────────────────────╮");
+                System.out.println("│          BANCO FINANCIERO        │");
                 System.out.println("├──────────────────────────────────┤");
-                System.out.println("│         INICIO DE SESIÓN         │");
-                System.out.println("├──────────────────────────────────┤");
-                System.out.print("│ Nombre: ");
+                System.out.println("│          INICIO DE SESIÓN        │");
+                System.out.println("╰──────────────────────────────────╯");
+                System.out.print("  Nombre: ");
+
+
                 nombreUsuario = reader.readLine();
 
-                System.out.print("│ Nº Tarjeta (16 dígitos): ");
+                System.out.print("  Nº Tarjeta (16 dígitos): ");
                 tarjetaUsuario = reader.readLine();
 
                 // Validar tarjeta con algoritmo de Luhn
@@ -59,28 +59,28 @@ public class Main{
                         clienteSesion.Monto = clienteEncontrado.Monto;
                         clienteSesion.NumeroTarjeta = clienteEncontrado.NumeroTarjeta;
 
-                        System.out.println("├──────────────────────────────────┤");
-                        System.out.println("│ Tarjeta " + tipoTarjeta + " válida ✓       │");
-                        System.out.println("│ " + tarjetaEnmascarada + "         │");
-                        System.out.println("│ Bienvenido: " + String.format("%-15s", clienteEncontrado.Nombre) + "│");
-                        System.out.println("└──────────────────────────────────┘");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.println("   ║ Tarjeta " + tipoTarjeta + " valida       ");
+                        System.out.println("   ║ " + tarjetaEnmascarada + "         ");
+                        System.out.println("   ║ Bienvenido: " + String.format("%-15s", clienteEncontrado.Nombre));
+                        System.out.println("   ╚══════════════════════════════╝");
                         System.out.print("Presione Enter para continuar...");
                         reader.readLine();
 
                         sesionIniciada = true;
                     } else {
-                        System.out.println("├──────────────────────────────────┤");
-                        System.out.println("│  Tarjeta no pertenece al usuario │");
-                        System.out.println("│      o usuario no existe! ❌     │");
-                        System.out.println("└──────────────────────────────────┘");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.println("   ║  Tarjeta no pertenece al     ║");
+                        System.out.println("   ║  usuario o no existe!        ║");
+                        System.out.println("   ╚══════════════════════════════╝");
                         System.out.print("Presione Enter para intentar nuevamente...");
                         reader.readLine();
                     }
                 } else {
-                    System.out.println("├──────────────────────────────────┤");
-                    System.out.println("│    Tarjeta inválida! ❌         │");
-                    System.out.println("│  Verifique el número ingresado  │");
-                    System.out.println("└──────────────────────────────────┘");
+                    System.out.println("   ╠══════════════════════════════ ╣");
+                    System.out.println("   ║      Tarjeta invalida!        ║");
+                    System.out.println("   ║  Verifique el numero ingresado║");
+                    System.out.println("   ╚══════════════════════════════ ╝");
                     System.out.print("Presione Enter para intentar nuevamente...");
                     reader.readLine();
                 }
@@ -98,107 +98,117 @@ public class Main{
                 clearConsole();
 
                 // Encabezado del banco
-                System.out.println("┌──────────────────────────────────┐");
-                System.out.println("│       ✦ BANCO FINANCIERO ✦       │");
-                System.out.println("├──────────────────────────────────┤");
-                System.out.println("│ Cliente: " + String.format("%-20s", clienteSesion.Nombre) + "│");
-                System.out.printf ("│ Saldo: $%-23d │\n", clienteSesion.Monto);
-                System.out.println("├──────────────────────────────────┤");
-                System.out.println("│ 1. 💰  Realizar depósito          │");
-                System.out.println("│ 2. 💸  Retirar monto             │");
-                System.out.println("│ 3. 🔄  Transferir                │");
-                System.out.println("│ 4.     Realizar Tranferencias    │");
-                System.out.println("│ 5. 📋  Historial de movimientos  │");
-                System.out.println("│ 6. 🚪  Cerrar sesión             │");
-                System.out.println("└──────────────────────────────────┘");
-                System.out.print("Seleccione opción: ");
+                System.out.println("   ╔══════════════════════════════╗");
+                System.out.println("   ║        BANCO FINANCIERO      ║");
+                System.out.println("   ╠══════════════════════════════╣");
+                System.out.println("   ║ Cliente: " + String.format("%-20s", clienteSesion.Nombre));
+                System.out.printf ("   ║ Saldo: $%-23d \n", clienteSesion.Monto);
+                System.out.println("   ╠══════════════════════════════╣");
+                System.out.println("   ║ 1. Realizar deposito         ║");
+                System.out.println("   ║ 2. Retirar monto             ║");
+                System.out.println("   ║ 3. Transferir                ║");
+                System.out.println("   ║ 4. Realizar Transferencias   ║");
+                System.out.println("   ║ 5. Historial de movimientos  ║");
+                System.out.println("   ║ 6. Cerrar sesion             ║");
+                System.out.println("   ╚══════════════════════════════╝");
+                System.out.print("   Seleccione opcion: ");
 
                 opcion = Integer.parseInt(reader.readLine());
 
                 switch (opcion) {
                     case 1:
-                        System.out.println("\n┌────────── DEPÓSITO ──────────┐");
-                        System.out.print("│ Ingrese monto: ");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║          DEPOSITO            ║");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.print("   ║ Ingrese monto: ");
                         int montoDeposito = Integer.parseInt(reader.readLine());
                         clienteSesion.Depositar(montoDeposito);
-                        pilaHistorial.push("Depósito: +$" + montoDeposito);
-                        System.out.println("│ Depósito realizado ✓        │");
-                        System.out.println("└──────────────────────────────┘");
+                        pilaHistorial.push("Deposito: +$" + montoDeposito);
+                        System.out.println("   ║ Deposito realizado          ");
+                        System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
 
                     case 2:
-                        System.out.println("\n┌────────── RETIRO ────────────┐");
-                        System.out.print("│ Ingrese monto: ");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║           RETIRO             ║");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.print("   ║ Ingrese monto: ");
                         int montoRetiro = Integer.parseInt(reader.readLine());
                         if (montoRetiro <= clienteSesion.Monto) {
                             clienteSesion.Monto -= montoRetiro;
                             pilaHistorial.push("Retiro: -$" + montoRetiro);
-                            System.out.println("│ Retiro realizado ✓          │");
+                            System.out.println("   ║ Retiro realizado            ");
                         } else {
-                            System.out.println("│ Fondos insuficientes! ❌    │");
+                            System.out.println("   ║ Fondos insuficientes!       ");
                         }
-                        System.out.println("└──────────────────────────────┘");
+                        System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
 
                     case 3:
-                        System.out.println("\n┌───────── TRANSFERENCIA ──────┐");
-                        System.out.print("│ ID destinatario: ");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║        TRANSFERENCIA        ║");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.print("   ║ ID destinatario: ");
                         int idDestinatario = Integer.parseInt(reader.readLine());
-                        System.out.print("│ Monto a transferir: ");
+                        System.out.print("   ║ Monto a transferir: ");
                         int montoTransferencia = Integer.parseInt(reader.readLine());
 
                         if (montoTransferencia <= clienteSesion.Monto) {
                             clienteSesion.Transferir(montoTransferencia);
                             colaTransferencias.enqueue(montoTransferencia);
-                            System.out.println("│ Transferencia realizada ✓   │");
+                            System.out.println("   ║ Transferencia realizada     ");
                         } else {
-                            System.out.println("│ Fondos insuficientes! ❌    │");
+                            System.out.println("   ║ Fondos insuficientes!       ");
                         }
-                        System.out.println("└──────────────────────────────┘");
+                        System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
                     case 4:
-                        System.out.println("\n┌───────── TRANSFERENCIA ──────┐");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║        TRANSFERENCIA         ║");
+                        System.out.println("   ╠══════════════════════════════╣");
                         colaTransferencias.transferencias.printList("-->");
-                        System.out.print("│ Realizar Transferencia? :");
+                        System.out.print("   ║ Realizar Transferencia? :");
                         String processarTransferencia = reader.readLine();
                         pilaHistorial.push("Transferencia: -$" + colaTransferencias.dequeue());
-                        System.out.println("└─────────────────────────┘");
+                        System.out.println("   ╚══════════════════════════════╝");
                         break;
                     case 5: // HISTORIAL
-                        System.out.println("\n┌─────── HISTORIAL ───────┐");
-                        System.out.println("│ Últimos movimientos:    │");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║          HISTORIAL           ║");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.println("   ║ Ultimos movimientos:         ");
                         pilaHistorial.showAll();
-                        System.out.println("└─────────────────────────┘");
+                        System.out.println("   ╚═══════════════════════════════");
                         pause(reader);
                         break;
                     case 6:
-                        System.out.println("\n┌───────────────────────────┐");
-                        System.out.println("│  Sesión cerrada con éxito │");
-                        System.out.println("│   ¡Vuelva pronto! ✨       │");
-                        System.out.println("└───────────────────────────┘");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║  Sesion cerrada con exito    ║");
+                        System.out.println("   ║     Vuelva pronto!           ║");
+                        System.out.println("   ╚══════════════════════════════╝");
                         salir = true;
                         break;
 
                     default:
-                        System.out.println("\n┌─────────────────────────┐");
-                        System.out.println("│   Opción no válida!     │");
-                        System.out.println("│  Intente nuevamente.    │");
-                        System.out.println("└─────────────────────────┘");
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║     Opcion no valida!        ║");
+                        System.out.println("   ║   Intente nuevamente.        ║");
+                        System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
                 }
             } catch (NumberFormatException e) {
-                System.out.println("\n┌─────────────────────────┐");
-                System.out.println("│   Error: Entrada inválida │");
-                System.out.println("└─────────────────────────┘");
+                System.out.println("\n   ╔══════════════════════════════╗");
+                System.out.println("   ║    Error: Entrada invalida    ║");
+                System.out.println("   ╚══════════════════════════════╝");
                 pause(reader);
             } catch (Exception e) {
-                System.out.println("\n┌─────────────────────────┐");
-                System.out.println("│     Error inesperado     │");
-                System.out.println("└─────────────────────────┘");
+                System.out.println("\n   ╔══════════════════════════════╗");
+                System.out.println("   ║      Error inesperado         ║");
+                System.out.println("   ╚══════════════════════════════╝");
                 pause(reader);
             }
         }

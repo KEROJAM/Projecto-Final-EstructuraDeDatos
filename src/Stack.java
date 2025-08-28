@@ -134,7 +134,7 @@ public class Stack<E> {
         }
 
         while (tail != null) {
-            System.out.println("│ - " + tail.getData() + " │");
+            System.out.println("   ║ "+ tail.getData() );
             tail = tail.last;
         }
     }
