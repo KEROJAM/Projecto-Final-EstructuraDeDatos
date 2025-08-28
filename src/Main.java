@@ -1,3 +1,5 @@
+import static java.lang.Thread.sleep;
+
 // Archivo: Main.java (modificado)
 public class Main{
     public static void main(String[] args) {
@@ -29,7 +31,7 @@ public class Main{
         // Pantalla de inicio de sesión
         while (!sesionIniciada) {
             try {
-                clearConsole();
+                ///clearConsole();
 
                 System.out.println("╭──────────────────────────────────╮");
                 System.out.println("│          BANCO FINANCIERO        │");
@@ -87,7 +89,7 @@ public class Main{
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
                 try {
-                    Thread.sleep(2000);
+                    sleep(2000);
                 } catch (InterruptedException ex) {}
             }
         }
@@ -135,6 +137,12 @@ public class Main{
                         System.out.println("   ╠══════════════════════════════╣");
                         System.out.print("   ║ Ingrese monto: ");
                         int montoRetiro = Integer.parseInt(reader.readLine());
+                        if(montoRetiro <= 0) {
+                            System.out.println("   ║        Valor invalido        ║");
+                            System.out.println("   ╚══════════════════════════════╝");
+                            sleep(1500);
+                            continue;
+                        }
                         if (montoRetiro <= clienteSesion.Monto) {
                             clienteSesion.Monto -= montoRetiro;
                             pilaHistorial.push("Retiro: -$" + montoRetiro);
