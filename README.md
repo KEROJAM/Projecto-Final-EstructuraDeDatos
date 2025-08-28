@@ -33,7 +33,7 @@ Este proyecto desarrolla un sistema de manejo de transferencias, depositos, reti
 2. Usar el menu:
    ```
    ╔══════════════════════════════╗
-   ║        BANCO FINANCIERO      ║
+   ║       BANCO FINANCIERO       ║
    ╠══════════════════════════════╣
    ║ Cliente: *Nombre Cliente*    ║
    ║ Saldo: *Saldo Cliente*       ║
