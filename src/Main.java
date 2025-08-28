@@ -164,7 +164,7 @@ public class Main{
                         colaTransferencias.transferencias.printList("-->");
                         System.out.print("│ Realizar Transferencia? :");
                         String processarTransferencia = reader.readLine();
-                        pilaHistorial.push(colaTransferencias.dequeue());
+                        pilaHistorial.push("Transferencia: -$" + colaTransferencias.dequeue());
                         System.out.println("└─────────────────────────┘");
                         break;
                     case 5: // HISTORIAL
@@ -175,10 +175,10 @@ public class Main{
                         pause(reader);
                         break;
                     case 6:
-                        System.out.println("\n┌─────────────────────────┐");
+                        System.out.println("\n┌───────────────────────────┐");
                         System.out.println("│  Sesión cerrada con éxito │");
-                        System.out.println("│   ¡Vuelva pronto! ✨      │");
-                        System.out.println("└─────────────────────────┘");
+                        System.out.println("│   ¡Vuelva pronto! ✨       │");
+                        System.out.println("└───────────────────────────┘");
                         salir = true;
                         break;
 
