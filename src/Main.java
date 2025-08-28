@@ -162,7 +162,7 @@ public class Main{
 
                     case 3:
                         System.out.println("\n   ╔══════════════════════════════╗");
-                        System.out.println("   ║        TRANSFERENCIA        ║");
+                        System.out.println("   ║        TRANSFERENCIA         ║");
                         System.out.println("   ╠══════════════════════════════╣");
                         System.out.print("   ║ ID destinatario: ");
                         int idDestinatario = Integer.parseInt(reader.readLine());
@@ -172,9 +172,9 @@ public class Main{
                         if (montoTransferencia <= clienteSesion.Monto) {
                             clienteSesion.Transferir(montoTransferencia);
                             colaTransferencias.enqueue(montoTransferencia);
-                            System.out.println("   ║ Transferencia realizada     ");
+                            System.out.println("   ║ Transferencia realizada      ║");
                         } else {
-                            System.out.println("   ║ Fondos insuficientes!       ");
+                            System.out.println("   ║ Fondos insuficientes!        ║");
                         }
                         System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
@@ -183,6 +183,7 @@ public class Main{
                         System.out.println("\n   ╔══════════════════════════════╗");
                         System.out.println("   ║        TRANSFERENCIA         ║");
                         System.out.println("   ╠══════════════════════════════╣");
+                        System.out.print("   ║");
                         colaTransferencias.transferencias.printList("-->");
                         System.out.print("   ║ Realizar Transferencia? :");
                         String processarTransferencia = reader.readLine();
@@ -195,7 +196,7 @@ public class Main{
                         System.out.println("   ╠══════════════════════════════╣");
                         System.out.println("   ║ Ultimos movimientos:         ");
                         pilaHistorial.showAll();
-                        System.out.println("   ╚═══════════════════════════════");
+                        System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
                     case 6:
@@ -216,12 +217,12 @@ public class Main{
                 }
             } catch (NumberFormatException e) {
                 System.out.println("\n   ╔══════════════════════════════╗");
-                System.out.println("   ║    Error: Entrada invalida    ║");
+                System.out.println("   ║    Error: Entrada invalida   ║");
                 System.out.println("   ╚══════════════════════════════╝");
                 pause(reader);
             } catch (Exception e) {
                 System.out.println("\n   ╔══════════════════════════════╗");
-                System.out.println("   ║      Error inesperado         ║");
+                System.out.println("   ║      Error inesperado        ║");
                 System.out.println("   ╚══════════════════════════════╝");
                 pause(reader);
             }
