@@ -134,4 +134,11 @@ public class Queue<E> {
         this.transferencias.firstNode = null;
         this.size = 0;
     }
+
+    public void offer(E clienteOrigen) {
+    }
+
+    public E poll() {
+        return null;
+    }
 }

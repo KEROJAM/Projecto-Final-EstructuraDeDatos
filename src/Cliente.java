@@ -3,13 +3,15 @@ public class Cliente {
     int ID;
     String Nombre;
     int Monto;
-    String NumeroTarjeta;  // Agregamos este campo
+    String NumeroTarjeta;
+    boolean sesionActiva;  // Nuevo campo para controlar el estado de sesión
 
     public Cliente() {
         this.ID = 0;
         this.Nombre = "";
         this.Monto = 0;
         this.NumeroTarjeta = "";
+        this.sesionActiva = false;
     }
 
     public Cliente(int ID, String Nombre, int Monto, String NumeroTarjeta) {
@@ -17,6 +19,7 @@ public class Cliente {
         this.Nombre = Nombre;
         this.Monto = Monto;
         this.NumeroTarjeta = NumeroTarjeta;
+        this.sesionActiva = false;
     }
 
     public void Depositar(int Monto){
@@ -33,5 +36,23 @@ public class Cliente {
 
     public String getNumeroTarjeta() {
         return NumeroTarjeta;
+    }
+
+    // Método para verificar si coincide con nombre completo
+    public boolean coincideConNombre(String nombre) {
+        return this.Nombre.equalsIgnoreCase(nombre);
+    }
+
+    // Métodos para control de sesión
+    public boolean isSesionActiva() {
+        return sesionActiva;
+    }
+
+    public void iniciarSesion() {
+        this.sesionActiva = true;
+    }
+
+    public void cerrarSesion() {
+        this.sesionActiva = false;
     }
 }

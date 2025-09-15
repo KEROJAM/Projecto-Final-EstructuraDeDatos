@@ -100,7 +100,7 @@ public class GrafoBancario {
             return;
         }
         
-        Queue<Integer> cola = new LinkedList<>();
+        Queue<Integer> cola = new Queue<>();
         Map<Integer, Integer> padre = new HashMap<>();
         Set<Integer> visitados = new HashSet<>();
         
