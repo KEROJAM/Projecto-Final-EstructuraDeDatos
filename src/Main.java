@@ -186,8 +186,9 @@ public class Main {
                 System.out.println("   ║ 3. Transferir                ║");
                 System.out.println("   ║ 4. Realizar Transferencias   ║");
                 System.out.println("   ║ 5. Historial de movimientos  ║");
-                System.out.println("   ║ 6. Funciones Avanzadas       ║");
-                System.out.println("   ║ 7. Cerrar sesion             ║");
+                System.out.println("   ║ 6. Caja de Inversion         ║");
+                System.out.println("   ║ 7. Funciones Avanzadas       ║");
+                System.out.println("   ║ 8. Cerrar sesion             ║");
                 System.out.println("   ╚══════════════════════════════╝");
                 System.out.print("   Seleccione opcion: ");
 
@@ -353,9 +354,53 @@ public class Main {
                         pause(reader);
                         break;
                     case 6:
-                        mostrarMenuAvanzado(reader, clientesTable);
+                        System.out.println("\n   ╔══════════════════════════════╗");
+                        System.out.println("   ║       CAJA DE INVERSIÓN      ║");
+                        System.out.println("   ╠══════════════════════════════╣");
+                        System.out.print("   ║ Monto a invertir: ");
+                        try {
+                            int montoInversion = Integer.parseInt(reader.readLine());
+
+                            // Validar que el usuario tenga fondos suficientes
+                            if (montoInversion > 0 && montoInversion <= clienteSesion.Monto) {
+
+                                // Retirar el monto de la cuenta principal para "invertirlo"
+                                clienteSesion.Monto -= montoInversion;
+                                pilaHistorial.push("Inversión: -$" + montoInversion);
+
+                                // Tasa de interés anual del 7% convertida a mensual
+                                final double TASA_ANUAL = 0.07;
+                                final double TASA_MENSUAL = TASA_ANUAL / 12.0;
+
+                                System.out.println("   ║ ──────────────────────────── ║");
+                                System.out.println("   ║ Inversión realizada con éxito.");
+                                System.out.println("   ║ Proyección de crecimiento (7% anual):");
+
+                                // Llamar al método recursivo para cada periodo
+                                double en1Mes = calcularInversionMensual(montoInversion, TASA_MENSUAL, 1);
+                                double en6Meses = calcularInversionMensual(montoInversion, TASA_MENSUAL, 6);
+                                double en1Anio = calcularInversionMensual(montoInversion, TASA_MENSUAL, 12);
+
+                                // Mostrar resultados
+                                System.out.printf("   ║ - Después de 1 mes:   $%,.2f%n", en1Mes);
+                                System.out.printf("   ║ - Después de 6 meses: $%,.2f%n", en6Meses);
+                                System.out.printf("   ║ - Después de 1 año:   $%,.2f%n", en1Anio);
+
+                            } else if (montoInversion <= 0) {
+                                System.out.println("   ║ El monto debe ser positivo.  ║");
+                            } else {
+                                System.out.println("   ║ Fondos insuficientes.        ║");
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println("   ║ Error: Ingrese un monto válido.");
+                        }
+                        System.out.println("   ╚══════════════════════════════╝");
+                        pause(reader);
                         break;
                     case 7:
+                        mostrarMenuAvanzado(reader, clientesTable);
+                        break;
+                    case 8:
                         System.out.println("\n   ╔══════════════════════════════╗");
                         System.out.println("   ║  Sesion cerrada con exito    ║");
                         System.out.println("   ║     Vuelva pronto!           ║");
@@ -529,6 +574,22 @@ public class Main {
 
     private static void menuGrafoRelaciones(java.io.BufferedReader reader, GrafoBancario grafoRelaciones) {
         // Tu código original de este menú
+    }
+
+    /**
+     * Calcula el crecimiento de una inversión de forma recursiva, aplicando una tasa de interés mensual.
+     * @param capital El monto inicial de la inversión.
+     * @param tasaMensual La tasa de interés que se aplica cada mes.
+     * @param meses El número de meses restantes para calcular.
+     * @return El capital final después de 'meses'.
+     */
+    private static double calcularInversionMensual(double capital, double tasaMensual, int meses) {
+        // Caso base: Si ya no quedan meses, devolvemos el capital acumulado.
+        if (meses == 0) {
+            return capital;
+        }
+        // Llamada recursiva: Calculamos el capital para el mes siguiente, reduciendo en 1 el total de meses.
+        return calcularInversionMensual(capital * (1 + tasaMensual), tasaMensual, meses - 1);
     }
 
     private static Cliente[] obtenerArrayClientes(HashTable clientesTable) {
