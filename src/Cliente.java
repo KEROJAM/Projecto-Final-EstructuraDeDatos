@@ -4,7 +4,8 @@ public class Cliente {
     String Nombre;
     int Monto;
     String NumeroTarjeta;
-    boolean sesionActiva;  // Nuevo campo para controlar el estado de sesión
+    public int montoAhorros; // : Saldo de la caja de ahorros
+    boolean sesionActiva;  //  campo para controlar el estado de sesión
 
     public Cliente() {
         this.ID = 0;

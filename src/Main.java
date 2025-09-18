@@ -353,50 +353,97 @@ public class Main {
                         System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
+                    // Archivo: Main.java, dentro del switch
+
                     case 6:
-                        System.out.println("\n   ╔══════════════════════════════╗");
-                        System.out.println("   ║       CAJA DE INVERSIÓN      ║");
-                        System.out.println("   ╠══════════════════════════════╣");
-                        System.out.print("   ║ Monto a invertir: ");
-                        try {
-                            int montoInversion = Integer.parseInt(reader.readLine());
+                        boolean salirCaja = false;
+                        final int LIMITE_AHORROS = 500000;
 
-                            // Validar que el usuario tenga fondos suficientes
-                            if (montoInversion > 0 && montoInversion <= clienteSesion.Monto) {
+                        while (!salirCaja) {
+                            clearConsole();
+                            System.out.println("   ╔══════════════════════════════╗");
+                            System.out.println("   ║         CAJA DE AHORROS      ║");
+                            System.out.println("   ╠══════════════════════════════╣");
+                            System.out.printf("   ║ Saldo Principal: $%,-13d ║%n", clienteSesion.Monto);
+                            System.out.printf("   ║ Saldo Ahorrado:  $%,-13d ║%n", clienteSesion.montoAhorros);
+                            System.out.printf("   ║ (Límite Ahorro: $%,d)      ║%n", LIMITE_AHORROS);
+                            System.out.println("   ╠══════════════════════════════╣");
+                            System.out.println("   ║ 1. Depositar en Ahorros      ║");
+                            System.out.println("   ║ 2. Retirar de Ahorros        ║");
+                            System.out.println("   ║ 3. Ver Proyección (7%% Anual) ║");
+                            System.out.println("   ║ 4. Volver al Menú Principal  ║");
+                            System.out.println("   ╚══════════════════════════════╝");
+                            System.out.print("   Seleccione una opción: ");
 
-                                // Retirar el monto de la cuenta principal para "invertirlo"
-                                clienteSesion.Monto -= montoInversion;
-                                pilaHistorial.push("Inversión: -$" + montoInversion);
+                            try {
+                                int opcionCaja = Integer.parseInt(reader.readLine());
+                                switch (opcionCaja) {
+                                    case 1: { // <--- LLAVE DE APERTURA
+                                        System.out.print("   > Monto a depositar (entero, mín. $100): ");
+                                        montoDeposito = Integer.parseInt(reader.readLine());
+                                        if (montoDeposito < 100) {
+                                            System.out.println("   > Error: El depósito mínimo es de $100.");
+                                        } else if (montoDeposito > clienteSesion.Monto) {
+                                            System.out.println("   > Error: Fondos insuficientes en cuenta principal.");
+                                        } else if (clienteSesion.montoAhorros + montoDeposito > LIMITE_AHORROS) {
+                                            System.out.println("   > Error: Esta operación superaría el límite de $500,000.");
+                                        } else {
+                                            clienteSesion.Monto -= montoDeposito;
+                                            clienteSesion.montoAhorros += montoDeposito;
+                                            pilaHistorial.push(String.format("Depósito Ahorros: -$%d", montoDeposito));
+                                            System.out.println("   > Depósito exitoso.");
+                                        }
+                                        pause(reader);
+                                        break;
+                                    } // <--- LLAVE DE CIERRE
 
-                                // Tasa de interés anual del 7% convertida a mensual
-                                final double TASA_ANUAL = 0.07;
-                                final double TASA_MENSUAL = TASA_ANUAL / 12.0;
+                                    case 2: { // <--- LLAVE DE APERTURA
+                                        System.out.print("   > Monto a retirar (entero): ");
+                                        montoRetiro = Integer.parseInt(reader.readLine());
+                                        if (montoRetiro > 0 && montoRetiro <= clienteSesion.montoAhorros) {
+                                            clienteSesion.montoAhorros -= montoRetiro;
+                                            clienteSesion.Monto += montoRetiro;
+                                            pilaHistorial.push(String.format("Retiro Ahorros: +$%d", montoRetiro));
+                                            System.out.println("   > Retiro exitoso.");
+                                        } else {
+                                            System.out.println("   > Error: Monto no válido o fondos insuficientes.");
+                                        }
+                                        pause(reader);
+                                        break;
+                                    } // <--- LLAVE DE CIERRE
 
-                                System.out.println("   ║ ──────────────────────────── ║");
-                                System.out.println("   ║ Inversión realizada con éxito.");
-                                System.out.println("   ║ Proyección de crecimiento (7% anual):");
+                                    case 3: { // <--- (Opcional, pero buena práctica)
+                                        if (clienteSesion.montoAhorros > 0) {
+                                            final double TASA_ANUAL = 0.07;
+                                            final double TASA_MENSUAL = TASA_ANUAL / 12.0;
+                                            double en1Mes = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 1);
+                                            double en6Meses = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 6);
+                                            double en1Anio = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 12);
 
-                                // Llamar al método recursivo para cada periodo
-                                double en1Mes = calcularInversionMensual(montoInversion, TASA_MENSUAL, 1);
-                                double en6Meses = calcularInversionMensual(montoInversion, TASA_MENSUAL, 6);
-                                double en1Anio = calcularInversionMensual(montoInversion, TASA_MENSUAL, 12);
+                                            System.out.printf("   > Proyección para $%d:%n", clienteSesion.montoAhorros);
+                                            System.out.printf("   > - En 1 mes:   $%,d%n", (long)en1Mes);
+                                            System.out.printf("   > - En 6 meses: $%,d%n", (long)en6Meses);
+                                            System.out.printf("   > - En 1 año:   $%,d%n", (long)en1Anio);
+                                        } else {
+                                            System.out.println("   > No hay fondos en la caja para proyectar.");
+                                        }
+                                        pause(reader);
+                                        break;
+                                    } // <--- LLAVE DE CIERRE
 
-                                // Mostrar resultados
-                                System.out.printf("   ║ - Después de 1 mes:   $%,.2f%n", en1Mes);
-                                System.out.printf("   ║ - Después de 6 meses: $%,.2f%n", en6Meses);
-                                System.out.printf("   ║ - Después de 1 año:   $%,.2f%n", en1Anio);
-
-                            } else if (montoInversion <= 0) {
-                                System.out.println("   ║ El monto debe ser positivo.  ║");
-                            } else {
-                                System.out.println("   ║ Fondos insuficientes.        ║");
+                                    case 4: // Salir
+                                        salirCaja = true;
+                                        break;
+                                    default:
+                                        System.out.println("   > Opción no válida.");
+                                        pause(reader);
+                                }
+                            } catch (Exception e) {
+                                System.out.println("   > Error, por favor ingrese un número entero válido.");
+                                pause(reader);
                             }
-                        } catch (NumberFormatException e) {
-                            System.out.println("   ║ Error: Ingrese un monto válido.");
                         }
-                        System.out.println("   ╚══════════════════════════════╝");
-                        pause(reader);
-                        break;
+                        break; // Fin del case 6
                     case 7:
                         mostrarMenuAvanzado(reader, clientesTable);
                         break;
@@ -600,6 +647,13 @@ public class Main {
         clientes[3] = clientesTable.get("4915762317479773");
         clientes[4] = clientesTable.get("5161034964107141");
         return clientes;
+    }
+
+    // Archivo: Main.java (debe contener este método)
+
+    private static double calcularCrecimientoAhorros(double capital, double tasaMensual, int meses) {
+        if (meses == 0) return capital;
+        return calcularCrecimientoAhorros(capital * (1 + tasaMensual), tasaMensual, meses - 1);
     }
 
 
