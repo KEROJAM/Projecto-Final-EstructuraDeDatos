@@ -138,4 +138,9 @@ public class Stack<E> {
             tail = tail.last;
         }
     }
+
+    public void clear() {
+        this.historial.firstNode = null; // Elimina la referencia al primer nodo
+        this.size = 0;                   // Reinicia el contador de tamaño
+    }
 }
