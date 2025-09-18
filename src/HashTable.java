@@ -55,4 +55,5 @@ public class HashTable {
     public int size() {
         return size;
     }
+
 }

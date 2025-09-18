@@ -60,30 +60,56 @@ public class Main {
      * Nuevo método para gestionar el proceso de inicio de sesión.
      * Si es exitoso, llama al menú del banco que ya tenías.
      */
+// PEGA ESTE CÓDIGO ACTUALIZADO
     public static void iniciarSesion(java.io.BufferedReader reader, HashTable clientesTable) throws IOException {
         clearConsole();
         System.out.println("╭──────────────────────────────────╮");
         System.out.println("│          INICIO DE SESIÓN        │");
         System.out.println("╰──────────────────────────────────╯");
-        System.out.print("  Nombre: ");
-        String nombreUsuario = reader.readLine();
 
+        // 1. Pedir el número de tarjeta primero para buscar al cliente
         System.out.print("  Nº Tarjeta (16 dígitos): ");
         String tarjetaUsuario = reader.readLine();
 
-        if (ValidadorTarjeta.validarTarjeta(tarjetaUsuario)) {
-            Cliente clienteEncontrado = clientesTable.get(tarjetaUsuario);
-            if (clienteEncontrado != null && clienteEncontrado.validarTarjetaYNombre(tarjetaUsuario, nombreUsuario)) {
+        // Validamos la tarjeta y la buscamos en la tabla hash
+        if (!ValidadorTarjeta.validarTarjeta(tarjetaUsuario)) {
+            System.out.println("\n   Error: Formato de tarjeta no válido.");
+            pause(reader);
+            return; // Termina el intento de login
+        }
+
+        Cliente clienteEncontrado = clientesTable.get(tarjetaUsuario);
+
+        // Si la tarjeta no existe, no continuamos
+        if (clienteEncontrado == null) {
+            System.out.println("\n   Error: Credenciales incorrectas.");
+            pause(reader);
+            return;
+        }
+
+        // 2. Si la tarjeta existe, pedimos el resto de datos para confirmar
+        try {
+            System.out.print("  ID de Cliente: ");
+            int idUsuario = Integer.parseInt(reader.readLine());
+
+            System.out.print("  Nombre: ");
+            String nombreUsuario = reader.readLine();
+
+            System.out.print("  Apellido: ");
+            String apellidoUsuario = reader.readLine();
+            String nombreCompleto = nombreUsuario + " " + apellidoUsuario;
+
+            // 3. Validar que TODOS los datos coincidan con el cliente encontrado
+            if (clienteEncontrado.ID == idUsuario && clienteEncontrado.Nombre.equalsIgnoreCase(nombreCompleto)) {
                 System.out.println("\n   ¡Inicio de sesión exitoso! Bienvenido, " + clienteEncontrado.Nombre);
                 pause(reader);
-                // Si el login es correcto, se llama a tu menú original del banco.
                 mostrarMenuDelBanco(reader, clienteEncontrado, clientesTable);
             } else {
-                System.out.println("\n   Error: Nombre de usuario o tarjeta incorrectos.");
+                System.out.println("\n   Error: Credenciales incorrectas.");
                 pause(reader);
             }
-        } else {
-            System.out.println("\n   Error: Número de tarjeta no válido.");
+        } catch (NumberFormatException e) {
+            System.out.println("\n   Error: El ID debe ser un número.");
             pause(reader);
         }
     }
@@ -91,31 +117,46 @@ public class Main {
     /**
      * Nuevo método para gestionar el registro de un nuevo cliente.
      */
+// PEGA ESTE CÓDIGO EN LUGAR DEL MÉTODO ANTERIOR
     public static void registrarCliente(java.io.BufferedReader reader, HashTable clientesTable) throws IOException {
         clearConsole();
         System.out.println("╭──────────────────────────────────╮");
         System.out.println("│      REGISTRO DE NUEVO CLIENTE   │");
         System.out.println("╰──────────────────────────────────╯");
-        System.out.print("  Ingrese su nombre completo: ");
+
+        // 1. Pedir el nombre
+        System.out.print("  Ingrese su nombre: ");
         String nombre = reader.readLine();
 
+        // 2. Pedir el apellido
+        System.out.print("  Ingrese su apellido: ");
+        String apellido = reader.readLine();
+
+        // Concatenar nombre y apellido para el nombre completo
+        String nombreCompleto = nombre + " " + apellido;
+
+        // 3. Pedir y validar el número de tarjeta
         String numeroTarjeta;
         while (true) {
             System.out.print("  Ingrese un Nº de Tarjeta (16 dígitos): ");
             numeroTarjeta = reader.readLine();
+
             if (clientesTable.get(numeroTarjeta) != null) {
                 System.out.println("   Error: Esta tarjeta ya está registrada.");
             } else if (ValidadorTarjeta.validarTarjeta(numeroTarjeta)) {
-                break;
+                break; // Tarjeta válida y no registrada, salir del bucle
             } else {
-                System.out.println("   Error: Número de tarjeta no válido.");
+                System.out.println("   Error: Número de tarjeta no válido, intente de nuevo.");
             }
         }
 
-        int id = clientesTable.size() + 1;
-        agregarCliente(clientesTable, id, nombre, 0, numeroTarjeta);
+        // 4. Asignar un ID secuencial. Si hay 5 clientes, el nuevo ID será 6.
+        int nuevoID = clientesTable.size() + 1;
 
-        System.out.println("\n   ¡Cliente registrado con éxito!");
+        // Agregar el nuevo cliente con saldo inicial de 0
+        agregarCliente(clientesTable, nuevoID, nombreCompleto, 0, numeroTarjeta);
+
+        System.out.println("\n   ¡Cliente '" + nombreCompleto + "' registrado con ID: " + nuevoID + "!");
         System.out.println("   Ahora puede iniciar sesión desde el menú principal.");
         pause(reader);
     }
@@ -132,10 +173,12 @@ public class Main {
         while (!salir) {
             try {
                 clearConsole();
+// REEMPLAZA CON ESTE CÓDIGO
                 System.out.println("   ╔══════════════════════════════╗");
                 System.out.println("   ║        BANCO FINANCIERO      ║");
                 System.out.println("   ╠══════════════════════════════╣");
                 System.out.println("   ║ Cliente: " + String.format("%-20s", clienteSesion.Nombre));
+                System.out.println("   ║ ID Cliente: " + String.format("%-17d", clienteSesion.ID)); // Línea añadida
                 System.out.printf ("   ║ Saldo: $%-23d \n", clienteSesion.Monto);
                 System.out.println("   ╠══════════════════════════════╣");
                 System.out.println("   ║ 1. Realizar deposito         ║");
@@ -191,21 +234,55 @@ public class Main {
                         System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
+// PEGA ESTE CÓDIGO EN LUGAR DEL BLOQUE ANTERIOR
                     case 3:
                         System.out.println("\n   ╔══════════════════════════════╗");
                         System.out.println("   ║        TRANSFERENCIA         ║");
                         System.out.println("   ╠══════════════════════════════╣");
-                        System.out.print("   ║ ID destinatario: ");
-                        int idDestinatario = Integer.parseInt(reader.readLine());
-                        System.out.print("   ║ Monto a transferir: ");
-                        int montoTransferencia = Integer.parseInt(reader.readLine());
-                        if (montoTransferencia <= clienteSesion.Monto) {
-                            clienteSesion.Transferir(montoTransferencia);
-                            colaTransferencias.enqueue(montoTransferencia);
-                            System.out.println("   ║ Transferencia realizada      ║");
+
+                        // 1. Pedir el número de tarjeta del destinatario
+                        System.out.print("   ║ Nº Tarjeta destinatario: ");
+                        String tarjetaDestinatario = reader.readLine();
+
+                        // 2. Usar la HashTable para encontrar al cliente de forma eficiente
+                        Cliente destinatario = clientesTable.get(tarjetaDestinatario);
+
+                        // 3. Verificar si el cliente con esa tarjeta existe
+                        if (destinatario != null) {
+                            // 4. Si existe, pedir el ID para una segunda validación
+                            System.out.print("   ║ ID destinatario: ");
+                            int idDestinatario = Integer.parseInt(reader.readLine());
+
+                            // 5. Comprobar que el ID introducido coincide con el del cliente encontrado
+                            if (destinatario.ID == idDestinatario) {
+                                // 6. Si ambos datos son correctos, pedir el monto a transferir
+                                System.out.print("   ║ Monto a transferir: ");
+                                int montoTransferencia = Integer.parseInt(reader.readLine());
+
+                                // 7. Validar el monto y los fondos del usuario
+                                if (montoTransferencia > 0 && montoTransferencia <= clienteSesion.Monto) {
+                                    // Realizar la transferencia
+                                    clienteSesion.Monto -= montoTransferencia; // Resta del origen
+                                    destinatario.Depositar(montoTransferencia); // Suma al destino
+                                    colaTransferencias.enqueue(montoTransferencia);
+                                    pilaHistorial.push("Transferencia a " + destinatario.Nombre + ": -$" + montoTransferencia);
+                                    System.out.println("   ║ Transferencia realizada      ║");
+
+                                } else if (montoTransferencia <= 0) {
+                                    System.out.println("   ║ Monto no válido              ║");
+
+                                } else {
+                                    System.out.println("   ║ Fondos insuficientes!        ║");
+                                }
+                            } else {
+                                // Error si el ID no corresponde a la tarjeta
+                                System.out.println("   ║ El ID no corresponde al titular  ║");
+                            }
                         } else {
-                            System.out.println("   ║ Fondos insuficientes!        ║");
+                            // Error si la tarjeta no fue encontrada
+                            System.out.println("   ║ Nº de Tarjeta no encontrado    ║");
                         }
+
                         System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
@@ -387,4 +464,6 @@ public class Main {
         clientes[4] = clientesTable.get("5161034964107141");
         return clientes;
     }
+
+
 }
