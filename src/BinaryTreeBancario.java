@@ -1,5 +1,5 @@
-public class BinaryTreeBancario {
-    
+public class BinaryTreeBancario<NodoBancario> {
+
     // Nodo del árbol binario
     private static class NodoCliente {
         Cliente cliente;
@@ -265,5 +265,84 @@ public class BinaryTreeBancario {
     private static class ClienteMaximo {
         Cliente cliente = null;
         int saldoMaximo = Integer.MIN_VALUE;
+    }
+
+    // Nodo simple para el árbol de montos
+    class NodoMonto {
+        int valor;
+        NodoMonto izquierda, derecha;
+
+        public NodoMonto(int valor) {
+            this.valor = valor;
+            izquierda = derecha = null;
+        }
+    }
+
+    // Árbol Binario de Búsqueda para enteros
+    public class ArbolDeMontos {
+        NodoMonto raiz;
+
+        public ArbolDeMontos() {
+            raiz = null;
+        }
+
+        // Método público para insertar
+        public void insertar(int valor) {
+            raiz = insertarRecursivo(raiz, valor);
+        }
+
+        // Lógica recursiva de inserción
+        private NodoMonto insertarRecursivo(NodoMonto actual, int valor) {
+            if (actual == null) {
+                return new NodoMonto(valor);
+            }
+            if (valor < actual.valor) {
+                actual.izquierda = insertarRecursivo(actual.izquierda, valor);
+            } else if (valor > actual.valor) {
+                actual.derecha = insertarRecursivo(actual.derecha, valor);
+            }
+            // Si el valor es igual, no lo insertamos para evitar duplicados
+            return actual;
+        }
+
+        // Método público para mostrar en orden (in-order traversal)
+        public void mostrarEnOrden() {
+            mostrarEnOrdenRecursivo(raiz);
+        }
+
+        // Lógica recursiva para el recorrido
+        private void mostrarEnOrdenRecursivo(NodoMonto nodo) {
+            if (nodo != null) {
+                mostrarEnOrdenRecursivo(nodo.izquierda);
+                System.out.println("   ║ $" + nodo.valor); // Muestra el monto
+                mostrarEnOrdenRecursivo(nodo.derecha);
+            }
+        }
+    }
+    /**
+     * Muestra solo los IDs de los clientes en el árbol, ordenados de menor a mayor.
+     * Lo usaremos para mostrar los montos de las transacciones.
+     */
+    public void mostrarIdsEnOrden() {
+        // Llama al método recursivo comenzando desde la raíz (tu variable se llama 'root')
+        mostrarIdsEnOrdenRecursivo(this.root);
+    }
+
+    /**
+     * Método recursivo privado que recorre el árbol en in-order.
+     * @param nodo El nodo actual que se está visitando.
+     */
+    private void mostrarIdsEnOrdenRecursivo(NodoCliente nodo) { // Usamos NodoCliente porque así se llama tu clase nodo
+        if (nodo != null) {
+            // 1. Ir al subárbol izquierdo
+            mostrarIdsEnOrdenRecursivo(nodo.left); // Tu variable se llama 'left'
+
+            // 2. Procesar el nodo actual: imprimir el ID del cliente
+            // Tu nodo guarda el cliente en la variable 'cliente'
+            System.out.println("   ║ $" + nodo.cliente.ID);
+
+            // 3. Ir al subárbol derecho
+            mostrarIdsEnOrdenRecursivo(nodo.right); // Tu variable se llama 'right'
+        }
     }
 }

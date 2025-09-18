@@ -297,12 +297,58 @@ public class Main {
                         pilaHistorial.push("Transferencia: -$" + colaTransferencias.dequeue());
                         System.out.println("   ╚══════════════════════════════╝");
                         break;
+// REEMPLAZA TU case 5 CON ESTA NUEVA VERSIÓN
                     case 5:
+                        clearConsole();
                         System.out.println("\n   ╔══════════════════════════════╗");
-                        System.out.println("   ║          HISTORIAL           ║");
+                        System.out.println("   ║     HISTORIAL DE MOVIMIENTOS   ║");
                         System.out.println("   ╠══════════════════════════════╣");
-                        System.out.println("   ║ Ultimos movimientos:         ");
-                        pilaHistorial.showAll();
+                        System.out.println("   ║ 1. Ver en orden cronológico  ║");
+                        System.out.println("   ║ 2. Filtrar por monto (menor a mayor) ║");
+                        System.out.println("   ╚══════════════════════════════╝");
+                        System.out.print("   Seleccione una opción: ");
+
+                        try {
+                            int opcionHistorial = Integer.parseInt(reader.readLine());
+                            System.out.println("   ╠══════════════════════════════╣");
+
+                            if (opcionHistorial == 1) {
+                                System.out.println("   ║ Últimos movimientos:         ");
+                                pilaHistorial.showAll();
+
+                            } else if (opcionHistorial == 2) {
+                                System.out.println("   ║ Movimientos ordenados por monto: ");
+                                if (pilaHistorial.isEmpty()) {
+                                    System.out.println("   ║ No hay movimientos para ordenar.");
+                                } else {
+                                    // 1. Usar tu árbol de clientes existente
+                                    BinaryTreeBancario arbolMontos = new BinaryTreeBancario();
+
+                                    // 2. Recorrer la pila
+// 2. Recorrer la pila
+                                    Node<String> actual = pilaHistorial.historial.firstNode;
+                                    while (actual != null) {
+                                        int monto = extraerMontoDeHistorial(actual.getData());
+                                        if (monto != 0) {
+                                            // Crear un Cliente "falso" con el monto en el ID
+                                            Cliente clienteFalso = new Cliente(monto, "Transaccion", 0, "N/A");
+
+                                            // CORRECCIÓN: Añadir el segundo argumento para la sucursal
+                                            arbolMontos.insertarCliente(clienteFalso, "Historial");
+                                        }
+                                        actual = actual.next;
+                                    }
+                                    // 4. Mostrar los IDs ordenados (que son nuestros montos)
+                                    arbolMontos.mostrarIdsEnOrden(); // Necesitaremos crear este método
+                                }
+                            } else {
+                                System.out.println("   ║ Opción no válida.");
+                            }
+
+                        } catch (NumberFormatException e) {
+                            System.out.println("   ║ Error: Ingrese un número válido.");
+                        }
+
                         System.out.println("   ╚══════════════════════════════╝");
                         pause(reader);
                         break;
@@ -349,6 +395,36 @@ public class Main {
         } catch (Exception e) {
             System.out.println("\n".repeat(20));
         }
+    }
+
+    /**
+     * Extrae el valor numérico de un string de transacción del historial.
+     * Ej: "Deposito: +$500" -> 500
+     * @param transaccion El string completo del historial.
+     * @return El monto como un entero.
+     */
+    private static int extraerMontoDeHistorial(String transaccion) {
+        try {
+            int indiceSigno = transaccion.indexOf('$');
+            if (indiceSigno != -1) {
+                // 1. Obtener la subcadena después del '$' y convertirla a número
+                String montoStr = transaccion.substring(indiceSigno + 1);
+                int monto = Integer.parseInt(montoStr.trim());
+
+                // 2. Revisar si la transacción original es un retiro o transferencia
+                //    Buscamos un signo de resta "-" en cualquier parte del texto.
+                if (transaccion.contains("-")) {
+                    // 3. Si es negativa, convertir el monto a negativo
+                    return -monto;
+                } else {
+                    // 4. Si no, devolver el monto positivo (para depósitos)
+                    return monto;
+                }
+            }
+        } catch (NumberFormatException e) {
+            return 0; // Si hay un error, no hacer nada
+        }
+        return 0; // Si no se encuentra el '$', retornar 0
     }
 
     private static void pause(java.io.BufferedReader reader) {
