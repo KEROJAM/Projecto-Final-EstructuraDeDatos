@@ -1,9 +1,11 @@
 // Archivo: BancoUI.java
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.File;
 
 public class BancoUI extends JFrame {
 
@@ -456,6 +458,74 @@ public class BancoUI extends JFrame {
     private void showError(String message, Component parent) { JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE); }
     private void showMessage(String title, String message) { JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE); }
     private void showMessage(String title, String message, Component parent) { JOptionPane.showMessageDialog(parent, message, title, JOptionPane.INFORMATION_MESSAGE); }
+
+    private void cargarClientesDesdeCSV() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccionar archivo CSV de clientes");
+        
+        // Filtro para archivos CSV
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Archivos CSV (*.csv)", "csv");
+        fileChooser.setFileFilter(filter);
+        
+        // Mostrar opciones
+        String[] opciones = {"Cargar desde archivo", "Crear archivo de ejemplo", "Cancelar"};
+        int opcion = JOptionPane.showOptionDialog(this,
+                "¿Qué deseas hacer con los archivos CSV?",
+                "Gestión de Clientes CSV",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opciones,
+                opciones[0]);
+        
+        if (opcion == 0) {
+            // Cargar desde archivo
+            int resultado = fileChooser.showOpenDialog(this);
+            if (resultado == JFileChooser.APPROVE_OPTION) {
+                File archivo = fileChooser.getSelectedFile();
+                int clientesCargados = CSVClientLoader.cargarClientes(archivo.getAbsolutePath(), clientesTable);
+                
+                if (clientesCargados > 0) {
+                    showMessage("Carga Exitosa", 
+                               "Se cargaron " + clientesCargados + " cliente(s) desde el archivo CSV.\n" +
+                               "Total de clientes en el sistema: " + clientesTable.size());
+                } else {
+                    showMessage("Sin Cambios", "No se cargaron nuevos clientes del archivo.");
+                }
+            }
+        } else if (opcion == 1) {
+            // Crear archivo de ejemplo
+            fileChooser.setDialogTitle("Guardar archivo CSV de ejemplo");
+            int resultado = fileChooser.showSaveDialog(this);
+            if (resultado == JFileChooser.APPROVE_OPTION) {
+                File archivo = fileChooser.getSelectedFile();
+                String ruta = archivo.getAbsolutePath();
+                if (!ruta.endsWith(".csv")) {
+                    ruta += ".csv";
+                }
+                CSVClientLoader.crearEjemplo(ruta);
+                showMessage("Archivo Creado", "Archivo CSV de ejemplo creado en:\n" + ruta);
+            }
+        }
+    }
+    
+    private void cargarArchivoCSV(File archivo) {
+        try {
+            int clientesCargados = CSVClientLoader.cargarClientes(archivo.getAbsolutePath(), clientesTable);
+            
+            if (clientesCargados > 0) {
+                showMessage("Carga exitosa", 
+                           String.format("Se cargaron %d cliente(s) exitosamente desde el archivo CSV.\n" +
+                                       "Total de clientes en el sistema: %d", 
+                                       clientesCargados, clientesTable.size()));
+            } else {
+                showMessage("Sin cambios", "No se cargaron nuevos clientes del archivo.");
+            }
+            
+        } catch (Exception e) {
+            showError("Error al cargar el archivo:\n" + e.getMessage());
+        }
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
