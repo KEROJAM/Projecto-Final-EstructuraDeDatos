@@ -22,27 +22,7 @@ public class BusquedaBancaria {
         return null;
     }
     
-    // Buscar todos los clientes con saldo en un rango específico
-    public static Cliente[] buscarClientesPorRangoSaldo(Cliente[] clientes, int saldoMin, int saldoMax) {
-        // Contar cuántos clientes cumplen el criterio
-        int count = 0;
-        for (Cliente cliente : clientes) {
-            if (cliente != null && cliente.Monto >= saldoMin && cliente.Monto <= saldoMax) {
-                count++;
-            }
-        }
-        
-        // Crear array con los resultados
-        Cliente[] resultado = new Cliente[count];
-        int index = 0;
-        for (Cliente cliente : clientes) {
-            if (cliente != null && cliente.Monto >= saldoMin && cliente.Monto <= saldoMax) {
-                resultado[index++] = cliente;
-            }
-        }
-        
-        return resultado;
-    }
+
     
     // ===== BÚSQUEDA BINARIA =====
     
@@ -77,33 +57,6 @@ public class BusquedaBancaria {
         
         // Buscar en la mitad derecha
         return busquedaBinariaRecursiva(clientes, id, medio + 1, fin);
-    }
-    
-    // Buscar cliente por saldo usando búsqueda binaria (requiere array ordenado por saldo)
-    public static Cliente busquedaBinariaPorSaldo(Cliente[] clientes, int saldo) {
-        Cliente[] clientesValidos = filtrarClientesValidos(clientes);
-        
-        // Ordenar por saldo antes de la búsqueda binaria
-        OrdenamientoBancario.quickSortPorSaldo(clientesValidos, 0, clientesValidos.length - 1);
-        
-        int inicio = 0;
-        int fin = clientesValidos.length - 1;
-        
-        while (inicio <= fin) {
-            int medio = inicio + (fin - inicio) / 2;
-            
-            if (clientesValidos[medio].Monto == saldo) {
-                return clientesValidos[medio];
-            }
-            
-            if (saldo < clientesValidos[medio].Monto) {
-                fin = medio - 1;
-            } else {
-                inicio = medio + 1;
-            }
-        }
-        
-        return null;
     }
     
     // ===== BÚSQUEDAS ESPECIALIZADAS PARA EL SISTEMA BANCARIO =====

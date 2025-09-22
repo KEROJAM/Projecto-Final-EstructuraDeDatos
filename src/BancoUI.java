@@ -6,6 +6,7 @@ import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.File;
+import java.util.Objects;
 
 public class BancoUI extends JFrame {
 
@@ -337,18 +338,18 @@ public class BancoUI extends JFrame {
     }
 
     private void accionTransferir() {
-        JTextField tarjetaField = createStyledTextField(), idField = createStyledTextField(), montoField = createStyledTextField();
+        JTextField tarjetaField = createStyledTextField(), NameField = createStyledTextField(), montoField = createStyledTextField();
         JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5)); panel.setBackground(COLOR_BACKGROUND);
         panel.add(new JLabel("Nº Tarjeta del Destinatario:")); panel.add(tarjetaField);
-        panel.add(new JLabel("ID del Destinatario:")); panel.add(idField);
+        panel.add(new JLabel("Nombre del Destinatario:")); panel.add(NameField);
         panel.add(new JLabel("Monto a Transferir:")); panel.add(montoField);
         int result = JOptionPane.showConfirmDialog(this, panel, "Realizar Transferencia", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
-                String tarjetaDest = tarjetaField.getText(); int idDest = Integer.parseInt(idField.getText()); int monto = Integer.parseInt(montoField.getText());
+                String tarjetaDest = tarjetaField.getText(); String NameDest = NameField.getText(); int monto = Integer.parseInt(montoField.getText());
                 Cliente destinatario = clientesTable.get(tarjetaDest);
                 if (destinatario == null) { showError("Nº de Tarjeta no encontrado."); return; }
-                if (destinatario.ID != idDest) { showError("El ID no corresponde al titular de la tarjeta."); return; }
+                if (!Objects.equals(destinatario.Nombre, NameDest)) { showError("El Nombre no corresponde al titular de la tarjeta."); return; }
                 if (monto <= 0 || monto > clienteSesion.Monto) { showError("Monto no válido o fondos insuficientes."); return; }
                 clienteSesion.Monto -= monto; destinatario.Depositar(monto); colaTransferencias.enqueue(monto);
                 pilaHistorial.push("Transferencia a " + destinatario.Nombre + ": -$" + monto);
@@ -509,24 +510,6 @@ public class BancoUI extends JFrame {
         }
     }
     
-    private void cargarArchivoCSV(File archivo) {
-        try {
-            int clientesCargados = CSVClientLoader.cargarClientes(archivo.getAbsolutePath(), clientesTable);
-            
-            if (clientesCargados > 0) {
-                showMessage("Carga exitosa", 
-                           String.format("Se cargaron %d cliente(s) exitosamente desde el archivo CSV.\n" +
-                                       "Total de clientes en el sistema: %d", 
-                                       clientesCargados, clientesTable.size()));
-            } else {
-                showMessage("Sin cambios", "No se cargaron nuevos clientes del archivo.");
-            }
-            
-        } catch (Exception e) {
-            showError("Error al cargar el archivo:\n" + e.getMessage());
-        }
-    }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             BancoUI frame = new BancoUI();
