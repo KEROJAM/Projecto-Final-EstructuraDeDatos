@@ -33,28 +33,28 @@ public class Queue<E> {
      * @throws IOException si ocurre un error al leer desde la entrada
      */
     public void enqueue(int Monto) throws IOException {
-                Node newNode = new Node(Monto);
-                
-                if (this.transferencias.firstNode == null) {
-                    this.transferencias.firstNode = newNode;
-                    this.transferencias.firstNode.setTail(newNode);
-                } else {
-                    // Find the current tail (last element)
-                    Node currentTail = this.transferencias.firstNode.tail;
-                    if (currentTail == null) {
-                        // Fallback: traverse to find tail
-                        currentTail = this.transferencias.firstNode;
-                        while (currentTail.next != null) {
-                            currentTail = currentTail.next;
-                        }
-                    }
-                    
-                    // Add new node at the end
-                    currentTail.setNext(newNode);
-                    newNode.setLast(currentTail);
-                    this.transferencias.firstNode.setTail(newNode);
+        Node newNode = new Node(Monto);
+
+        if (this.transferencias.firstNode == null) {
+            this.transferencias.firstNode = newNode;
+            this.transferencias.firstNode.setTail(newNode);
+        } else {
+            // Find the current tail (last element)
+            Node currentTail = this.transferencias.firstNode.tail;
+            if (currentTail == null) {
+                // Fallback: traverse to find tail
+                currentTail = this.transferencias.firstNode;
+                while (currentTail.next != null) {
+                    currentTail = currentTail.next;
                 }
-                this.size++;
+            }
+
+            // Add new node at the end
+            currentTail.setNext(newNode);
+            newNode.setLast(currentTail);
+            this.transferencias.firstNode.setTail(newNode);
+        }
+        this.size++;
     }
 
     /**
@@ -107,11 +107,11 @@ public class Queue<E> {
         if (this.isEmpty()) {
             throw new Exception("La Cola esta Vacia");
         }
-        
+
         System.out.println("Procesos en la cola:");
         Node current = this.transferencias.firstNode;
         int position = 1;
-        
+
         while (current != null) {
             System.out.println("Proceso " + position + ": " + current.Data);
             current = current.next;

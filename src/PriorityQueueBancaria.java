@@ -17,8 +17,8 @@ public class PriorityQueueBancaria {
 
     // Agregar transacción bancaria con prioridad
     public void agregarTransaccion(String tipo, int monto, String cliente, int prioridad) {
-        String transaccion = String.format("ID:%d %s: $%d - Cliente: %s", 
-                                         transaccionCounter++, tipo, monto, cliente);
+        String transaccion = String.format("ID:%d %s: $%d - Cliente: %s",
+                transaccionCounter++, tipo, monto, cliente);
         push(prioridad, transaccion);
     }
 
@@ -89,10 +89,10 @@ public class PriorityQueueBancaria {
             System.out.println("   ║ No hay transacciones pendientes");
             return;
         }
-        
+
         System.out.println("   ║ TRANSACCIONES PENDIENTES (" + size + "):");
         System.out.println("   ║ ═══════════════════════════════════════");
-        
+
         for (int i = 1; i <= size; i++) {
             if (data[i] != null) {
                 String prioridadTexto = getPrioridadTexto(data[i].getPriority());
@@ -110,7 +110,7 @@ public class PriorityQueueBancaria {
 
         System.out.println("   ║ PROCESANDO TRANSACCIONES POR PRIORIDAD:");
         System.out.println("   ║ ═══════════════════════════════════════");
-        
+
         int contador = 1;
         while (!isEmpty()) {
             String transaccion = procesarSiguienteTransaccion();
@@ -128,7 +128,7 @@ public class PriorityQueueBancaria {
 
         int[] contadorPrioridad = new int[4]; // índices 1, 2, 3 para prioridades
         int montoTotal = 0;
-        
+
         for (int i = 1; i <= size; i++) {
             if (data[i] != null) {
                 contadorPrioridad[data[i].getPriority()]++;

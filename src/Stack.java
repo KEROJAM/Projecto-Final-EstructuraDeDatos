@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
 public class Stack<E> {
     public LinkedList historial;
     private int size;
-    
+
     public Stack(){
         this.historial = new LinkedList();
         this.size = 0;

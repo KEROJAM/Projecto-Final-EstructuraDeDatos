@@ -58,6 +58,6 @@ public class Node <E> {
      * @return dato del nodo
      */
     public E getData() {
-            return Data;
+        return Data;
     }
 }

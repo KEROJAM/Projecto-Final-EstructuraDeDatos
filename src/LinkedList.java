@@ -1,4 +1,3 @@
-
 public class LinkedList {
     Node firstNode;
     int ListSize;
@@ -52,7 +51,7 @@ public class LinkedList {
                         temp = temp.next;
                     }
                 }
-                
+
                 while (temp != null) {
                     System.out.print(temp.Data);
                     if (temp.last != null) {

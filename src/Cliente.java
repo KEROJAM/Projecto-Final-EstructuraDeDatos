@@ -1,15 +1,12 @@
-import java.util.LinkedList;
-import java.time.LocalDateTime;
-
 public class Cliente {
     int ID;
     String Nombre;
     int Monto;
     String NumeroTarjeta;
+    public int montoAhorros;
     boolean sesionActiva;
     String contraseña;
-    public HistorialMovimientos historial; // Nuevo: Ahora es una clase
-    private LinkedList<LocalDateTime> transaccionesRecientes; // Nuevo: para detección de fraude
+    Stack<String> pilaHistorial; // AÑADIDO: Cada cliente tiene su propio historial
 
     public Cliente() {
         this.ID = 0;
@@ -18,20 +15,25 @@ public class Cliente {
         this.NumeroTarjeta = "";
         this.sesionActiva = false;
         this.contraseña = "";
-        this.historial = new HistorialMovimientos();
-        this.transaccionesRecientes = new LinkedList<>();
+        this.pilaHistorial = new Stack<>(); // AÑADIDO: Se inicializa el historial
     }
 
     public Cliente(int ID, String Nombre, int Monto, String NumeroTarjeta, String contraseña) {
         this.ID = ID;
-        this.Nombre = Monto; // Monto no se usa aquí, creo que era un error.
         this.Nombre = Nombre;
         this.Monto = Monto;
         this.NumeroTarjeta = NumeroTarjeta;
         this.sesionActiva = false;
         this.contraseña = contraseña;
-        this.historial = new HistorialMovimientos();
-        this.transaccionesRecientes = new LinkedList<>();
+        this.pilaHistorial = new Stack<>(); // AÑADIDO: Se inicializa el historial
+    }
+
+    public Cliente(int monto, String transaccion, int i, String s) {
+    }
+
+    // AÑADIDO: Método para acceder al historial del cliente
+    public Stack<String> getPilaHistorial() {
+        return this.pilaHistorial;
     }
 
     public void Depositar(int Monto){
@@ -42,37 +44,39 @@ public class Cliente {
         this.Monto -= Monto;
     }
 
-    public void Retirar(int Monto){
-        this.Monto -= Monto;
-    }
-
     public boolean validarContraseña(String contraseñaIngresada) {
         return this.contraseña.equals(contraseñaIngresada);
+    }
+
+    public void cambiarContraseña(String nuevaContraseña) {
+        this.contraseña = nuevaContraseña;
+    }
+
+    public boolean validarTarjetaYNombre(String tarjeta, String nombre) {
+        return this.NumeroTarjeta.equals(tarjeta) && this.Nombre.equalsIgnoreCase(nombre);
     }
 
     public String getNumeroTarjeta() {
         return NumeroTarjeta;
     }
 
-    public String getNombre() {
-        return Nombre;
+    public String getContraseña() {
+        return contraseña;
     }
 
-    // Nuevo: Método para añadir un movimiento con fecha y hora
-    public void addMovimiento(String descripcion, int monto, String tipo) {
-        historial.add(descripcion, monto, tipo, LocalDateTime.now());
+    public boolean coincideConNombre(String nombre) {
+        return this.Nombre.equalsIgnoreCase(nombre);
     }
 
-    // Nuevo: Método para registrar una transacción reciente
-    public void addTransaccionReciente(LocalDateTime tiempo) {
-        transaccionesRecientes.add(tiempo);
-        if (transaccionesRecientes.size() > 4) { // Limitar a las 4 últimas transacciones
-            transaccionesRecientes.removeFirst();
-        }
+    public boolean isSesionActiva() {
+        return sesionActiva;
     }
 
-    // Nuevo: Método para obtener las transacciones recientes
-    public LinkedList<LocalDateTime> getTransaccionesRecientes() {
-        return transaccionesRecientes;
+    public void iniciarSesion() {
+        this.sesionActiva = true;
+    }
+
+    public void cerrarSesion() {
+        this.sesionActiva = false;
     }
 }
