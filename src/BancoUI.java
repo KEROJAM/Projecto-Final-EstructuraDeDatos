@@ -1,17 +1,19 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BancoUI extends JFrame {
 
     // --- SECCIÓN 1: LÓGICA DEL SISTEMA (BACKEND) ---
     private HashTable clientesTable;
     private Cliente clienteSesion;
-    // private Stack<String> pilaHistorial; // ELIMINADO: Ya no hay un historial global
     private Queue<String> colaTransferencias;
     private static final String RUTA_CSV = "src/clientes.csv";
 
@@ -48,6 +50,69 @@ public class BancoUI extends JFrame {
     private JLabel saldoLabel;
     private JLabel ahorrosLabel;
 
+    // =========================================================================
+    // CLASES AUXILIARES PARA EL HISTORIAL ORDENADO POR MONTO (ÁRBOL BINARIO)
+    // =========================================================================
+
+    /**
+     * Nodo para el árbol binario de historial. Almacena el monto para la
+     * comparación y la descripción completa de la transacción.
+     */
+    private static class TransactionNode {
+        int amount;
+        String description;
+        TransactionNode left, right;
+
+        TransactionNode(int amount, String description) {
+            this.amount = amount;
+            this.description = description;
+        }
+    }
+
+    /**
+     * Árbol Binario de Búsqueda para ordenar las transacciones por monto.
+     * Los montos negativos (retiros) se colocarán a la izquierda y los
+     * positivos (depósitos) a la derecha.
+     */
+    private static class TransactionHistoryTree {
+        private TransactionNode root;
+
+        public void insert(int amount, String description) {
+            root = insertRec(root, amount, description);
+        }
+
+        private TransactionNode insertRec(TransactionNode current, int amount, String description) {
+            if (current == null) {
+                return new TransactionNode(amount, description);
+            }
+            if (amount < current.amount) {
+                current.left = insertRec(current.left, amount, description);
+            } else { // Si los montos son iguales, se inserta a la derecha.
+                current.right = insertRec(current.right, amount, description);
+            }
+            return current;
+        }
+
+        public String getInOrderTraversal() {
+            StringBuilder sb = new StringBuilder("Movimientos ordenados de menor a mayor monto:\n---------------------------------------------\n");
+            if (root == null) {
+                sb.append("No hay movimientos para ordenar.");
+            } else {
+                inOrderRec(root, sb);
+            }
+            return sb.toString();
+        }
+
+        private void inOrderRec(TransactionNode node, StringBuilder sb) {
+            if (node != null) {
+                inOrderRec(node.left, sb);
+                sb.append(node.description).append("\n");
+                inOrderRec(node.right, sb);
+            }
+        }
+    }
+
+
     public BancoUI() {
         inicializarSistemaBancario();
         applyGlobalUIStyles();
@@ -69,7 +134,6 @@ public class BancoUI extends JFrame {
 
     private void inicializarSistemaBancario() {
         clientesTable = new HashTable(100);
-        // pilaHistorial = new Stack<>(); // ELIMINADO
         colaTransferencias = new Queue<>();
 
         File csvFile = new File(RUTA_CSV);
@@ -86,7 +150,6 @@ public class BancoUI extends JFrame {
         }
     }
 
-
     private void agregarCliente(int id, String nombre, int monto, String numeroTarjeta, String contrasena, boolean guardarEnCSV) {
         Cliente cliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena);
         clientesTable.put(numeroTarjeta, cliente);
@@ -94,11 +157,6 @@ public class BancoUI extends JFrame {
             CSVClientLoader.guardarCliente(cliente, RUTA_CSV);
         }
     }
-
-
-    // =========================================================================
-    // PANELES DE LA INTERFAZ (DISEÑO MEJORADO)
-    // =========================================================================
 
     private void crearInitialPanel() {
         initialPanel = new JPanel(new GridBagLayout());
@@ -132,7 +190,6 @@ public class BancoUI extends JFrame {
         advancedOptionsButton.addActionListener(e -> gestionarCSV());
     }
 
-
     private void crearLoginPanel() {
         loginPanel = new JPanel(new GridBagLayout());
         loginPanel.setBackground(COLOR_BACKGROUND);
@@ -164,7 +221,6 @@ public class BancoUI extends JFrame {
 
         loginButton.addActionListener(e -> intentarLogin());
         backButton.addActionListener(e -> cardLayout.show(mainPanel, "Initial"));
-
     }
 
     private void crearMainMenuPanel() {
@@ -205,58 +261,90 @@ public class BancoUI extends JFrame {
         mainMenuPanel.add(logoutBtn, BorderLayout.SOUTH);
     }
 
-    // =========================================================================
-    // LÓGICA DE ACCIONES Y EVENTOS
-    // =========================================================================
+    private String getTimestamp() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    /**
+     * Clona el contenido de la pila de historial a una nueva pila.
+     * Este método es no destructivo; la pila original del cliente se restaura a su estado inicial.
+     * @return Un nuevo objeto Stack que es una copia exacta del historial del cliente.
+     */
+    private Stack<String> getHistoryElements() {
+        Stack<String> copyStack = new Stack<>();
+        Stack<String> originalStack = clienteSesion.getPilaHistorial();
+        Stack<String> tempStack = new Stack<>(); // Pila auxiliar para la operación
+
+        try {
+            // 1. Mover todos los elementos de la pila original a la pila temporal.
+            //    Esto invierte el orden.
+            while (!originalStack.isEmpty()) {
+                tempStack.push(originalStack.peek());
+                originalStack.pop();
+            }
+
+            // 2. Mover los elementos de la pila temporal de vuelta a la original Y a la nueva pila de copia.
+            //    Esto restaura la pila original y crea la copia en el orden correcto.
+            while (!tempStack.isEmpty()) {
+                String item = tempStack.peek();
+                originalStack.push(item);
+                copyStack.push(item);
+                tempStack.pop();
+            }
+        } catch (Exception e) {
+            System.err.println("Error al clonar la pila de historial: " + e.getMessage());
+        }
+        return copyStack;
+    }
 
 
+    /**
+     * Muestra un diálogo para que el usuario elija cómo ver el historial.
+     */
     private void accionVerHistorial() {
-        // MODIFICADO: Usa el historial del cliente con sesión activa
         if (clienteSesion.getPilaHistorial().isEmpty()) {
             showMessage("Historial Vacío", "No hay movimientos en el historial.");
             return;
         }
 
+        Object[] options = {"Orden Cronológico", "Ordenar por Monto"};
+        int choice = JOptionPane.showOptionDialog(this,
+                "¿Cómo deseas ver el historial de movimientos?",
+                "Ver Historial",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (choice == JOptionPane.YES_OPTION) {
+            mostrarHistorialCronologico();
+        } else if (choice == JOptionPane.NO_OPTION) {
+            mostrarHistorialPorMonto();
+        }
+    }
+
+    /**
+     * Muestra el historial en orden cronológico (más reciente primero), consumiendo una copia de la pila.
+     */
+    private void mostrarHistorialCronologico() {
         StringBuilder historialTexto = new StringBuilder("Últimos movimientos (Más recientes primero):\n---------------------------------------------\n");
+        Stack<String> historialCopy = getHistoryElements(); // Obtiene una copia segura para consumir
+
+        int contador = 1;
         try {
-            // Obtener el historial del cliente
-            Stack<String> historial = clienteSesion.getPilaHistorial();
-            
-            // Crear una pila temporal para invertir el orden
-            Stack<String> tempStack = new Stack<>();
-            
-            // Copiar los elementos a la pila temporal
-            while (!historial.isEmpty()) {
-                try {
-                    String item = historial.peek();
-                    tempStack.push(item);
-                    historial.pop();
-                } catch (Exception e) {
-                    break; // Salir si hay algún error
-                }
-            }
-            
-            // Mostrar los elementos en orden cronológico
-            int contador = 1;
-            while (!tempStack.isEmpty()) {
-                try {
-                    String item = tempStack.peek();
-                    historialTexto.append(contador + ". ").append(item).append("\n");
-                    tempStack.pop();
-                    contador++;
-                    
-                    // Volver a agregar el ítem al historial original
-                    historial.push(item);
-                } catch (Exception e) {
-                    break; // Salir si hay algún error
-                }
-            }
-            
-            if (contador == 1) {
-                historialTexto.append("No hay historial de transacciones.");
+            while (!historialCopy.isEmpty()) {
+                historialTexto.append(contador).append(". ").append(historialCopy.peek()).append("\n");
+                historialCopy.pop();
+                contador++;
             }
         } catch (Exception e) {
-            historialTexto.append("Error al leer el historial: ").append(e.getMessage());
+            historialTexto.append("\nError al procesar el historial.");
+            System.err.println("Error en mostrarHistorialCronologico: " + e.getMessage());
+        }
+
+        if (contador == 1) { // Si el bucle nunca se ejecutó
+            historialTexto.append("No hay historial de transacciones.");
         }
 
         JTextArea textArea = new JTextArea(historialTexto.toString());
@@ -264,10 +352,50 @@ public class BancoUI extends JFrame {
         textArea.setEditable(false);
         textArea.setBackground(COLOR_BACKGROUND);
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(450, 300));
-        JOptionPane.showMessageDialog(this, scrollPane, "Historial de Movimientos", JOptionPane.PLAIN_MESSAGE);
+        scrollPane.setPreferredSize(new Dimension(500, 350));
+        JOptionPane.showMessageDialog(this, scrollPane, "Historial de Movimientos (Cronológico)", JOptionPane.PLAIN_MESSAGE);
     }
 
+    /**
+     * Construye un árbol binario con el historial para mostrarlo ordenado por monto.
+     */
+    private void mostrarHistorialPorMonto() {
+        TransactionHistoryTree sortedHistoryTree = new TransactionHistoryTree();
+        Stack<String> historialCopy = getHistoryElements(); // Obtiene una copia segura para consumir
+
+        // Expresión regular para encontrar montos con signo, ej: +$100, -$50
+        Pattern pattern = Pattern.compile("([+-])\\$(\\d+)");
+
+        try {
+            while (!historialCopy.isEmpty()) {
+                String item = historialCopy.peek();
+                Matcher matcher = pattern.matcher(item);
+                if (matcher.find()) {
+                    String sign = matcher.group(1);
+                    int amount = Integer.parseInt(matcher.group(2));
+                    if ("-".equals(sign)) {
+                        amount *= -1; // Convertir retiros a números negativos para la ordenación
+                    }
+                    sortedHistoryTree.insert(amount, item);
+                }
+                historialCopy.pop();
+            }
+        } catch (Exception e) {
+            showError("Ocurrió un error al construir el árbol de historial.");
+            System.err.println("Error en mostrarHistorialPorMonto: " + e.getMessage());
+            return;
+        }
+
+        String sortedHistorial = sortedHistoryTree.getInOrderTraversal();
+
+        JTextArea textArea = new JTextArea(sortedHistorial);
+        textArea.setFont(FONT_BODY);
+        textArea.setEditable(false);
+        textArea.setBackground(COLOR_BACKGROUND);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(500, 350));
+        JOptionPane.showMessageDialog(this, scrollPane, "Historial de Movimientos (Ordenado por Monto)", JOptionPane.PLAIN_MESSAGE);
+    }
 
     private void intentarLogin() {
         String tarjeta = loginTarjetaField.getText();
@@ -287,13 +415,11 @@ public class BancoUI extends JFrame {
             return;
         }
         clienteSesion = clienteEncontrado;
-        // Establecer la referencia a la interfaz de usuario
         clienteSesion.setUI(this);
         actualizarInfoCliente();
         cardLayout.show(mainPanel, "MainMenu");
         showMessage("Inicio de sesión exitoso", "Bienvenido, " + clienteSesion.Nombre);
     }
-
 
     private void mostrarDialogoRegistro() {
         JTextField nombreField = createStyledTextField();
@@ -345,7 +471,6 @@ public class BancoUI extends JFrame {
         }
     }
 
-
     private void accionDepositar() {
         if (clienteSesion.isTarjetaBloqueada()) {
             showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
@@ -356,9 +481,15 @@ public class BancoUI extends JFrame {
         try {
             int monto = Integer.parseInt(montoStr);
             if (monto <= 0) { showError("El monto debe ser positivo."); return; }
+<<<<<<< HEAD
             inusual = clienteSesion.Depositar(monto);
             // MODIFICADO: Usa el historial del cliente
             clienteSesion.getPilaHistorial().push("Deposito: +$" + monto);
+=======
+            clienteSesion.Depositar(monto);
+            // MODIFICADO: Añade registro con fecha y hora
+            clienteSesion.getPilaHistorial().push("Deposito: +$" + monto + " [" + getTimestamp() + "]");
+>>>>>>> 390cd6aa17a9ede0c97c40d327edeec55cc7ee24
             actualizarInfoCliente();
             showMessage("Éxito", "Depósito de $" + monto + " realizado con éxito.");
         } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
@@ -376,8 +507,8 @@ public class BancoUI extends JFrame {
             if (monto <= 0) { showError("El monto debe ser positivo."); return; }
             if (monto > clienteSesion.Monto) { showError("Fondos insuficientes."); return; }
             clienteSesion.Monto -= monto;
-            // MODIFICADO: Usa el historial del cliente
-            clienteSesion.getPilaHistorial().push("Retiro: -$" + monto);
+            // MODIFICADO: Añade registro con fecha y hora
+            clienteSesion.getPilaHistorial().push("Retiro: -$" + monto + " [" + getTimestamp() + "]");
             actualizarInfoCliente();
             showMessage("Éxito", "Retiro de $" + monto + " realizado con éxito.");
         } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
@@ -408,13 +539,10 @@ public class BancoUI extends JFrame {
                 destinatario.Depositar(monto);
                 colaTransferencias.enqueue(monto);
 
-                // --- MODIFICACIÓN CLAVE ---
-                // 1. Añade la transferencia ENVIADA al historial del cliente actual
-                clienteSesion.getPilaHistorial().push("Transferencia a " + destinatario.Nombre + ": -$" + monto);
-
-                // 2. Añade la transferencia RECIBIDA al historial del cliente destinatario
-                destinatario.getPilaHistorial().push("Transferencia de " + clienteSesion.Nombre + ": +$" + monto);
-                // -------------------------
+                // MODIFICADO: Añade registro con fecha y hora a ambos clientes
+                String timestamp = getTimestamp();
+                clienteSesion.getPilaHistorial().push("Transferencia a " + destinatario.Nombre + ": -$" + monto + " [" + timestamp + "]");
+                destinatario.getPilaHistorial().push("Transferencia de " + clienteSesion.Nombre + ": +$" + monto + " [" + timestamp + "]");
 
                 actualizarInfoCliente();
                 if (!esTransferenciaInusual) {
@@ -511,8 +639,8 @@ public class BancoUI extends JFrame {
                 } else {
                     clienteSesion.Monto -= monto;
                     clienteSesion.montoAhorros += monto;
-                    // MODIFICADO: Usa el historial del cliente
-                    clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -$%d", monto));
+                    // MODIFICADO: Añade registro con fecha y hora
+                    clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -$%d [%s]", monto, getTimestamp()));
                     actualizarInfoCliente();
                     ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,d", clienteSesion.montoAhorros));
                     showMessage("Éxito", "Depósito a ahorros exitoso.", dialog);
@@ -528,8 +656,8 @@ public class BancoUI extends JFrame {
                 if (monto > 0 && monto <= clienteSesion.montoAhorros) {
                     clienteSesion.montoAhorros -= monto;
                     clienteSesion.Monto += monto;
-                    // MODIFICADO: Usa el historial del cliente
-                    clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +$%d", monto));
+                    // MODIFICADO: Añade registro con fecha y hora
+                    clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +$%d [%s]", monto, getTimestamp()));
                     actualizarInfoCliente();
                     ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,d", clienteSesion.montoAhorros));
                     showMessage("Éxito", "Retiro de ahorros exitoso.", dialog);
@@ -567,7 +695,6 @@ public class BancoUI extends JFrame {
         loginPasswordField.setText("");
         cardLayout.show(mainPanel, "Initial");
     }
-
 
     private void actualizarInfoCliente() {
         if (clienteSesion != null) {
@@ -612,12 +739,10 @@ public class BancoUI extends JFrame {
     }
 
     public void mostrarAlertaFraude(String titulo, String mensaje) {
-        // Crear un panel personalizado para el mensaje
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-        
-        // Icono de advertencia
         JLabel iconLabel = new JLabel(new ImageIcon("warning.png"));
+<<<<<<< HEAD
 
         // Panel para el mensaje
         JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
@@ -625,43 +750,47 @@ public class BancoUI extends JFrame {
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         titleLabel.setForeground(new Color(200, 0, 0)); // Rojo oscuro
 
+=======
+        JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
+        JLabel titleLabel = new JLabel(titulo);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(200, 0, 0));
+>>>>>>> 390cd6aa17a9ede0c97c40d327edeec55cc7ee24
         JTextArea messageArea = new JTextArea(mensaje);
         messageArea.setEditable(false);
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         messageArea.setBackground(panel.getBackground());
         messageArea.setFont(FONT_BODY);
+<<<<<<< HEAD
 
         messagePanel.add(titleLabel, BorderLayout.NORTH);
         messagePanel.add(messageArea, BorderLayout.CENTER);
 
         // Configurar el panel principal
+=======
+        messagePanel.add(titleLabel, BorderLayout.NORTH);
+        messagePanel.add(messageArea, BorderLayout.CENTER);
+>>>>>>> 390cd6aa17a9ede0c97c40d327edeec55cc7ee24
         panel.add(iconLabel, BorderLayout.WEST);
         panel.add(messagePanel, BorderLayout.CENTER);
-        
-        // Mostrar el diálogo
-        JOptionPane.showMessageDialog(
-            this,
-            panel,
-            "Alerta de Seguridad",
-            JOptionPane.WARNING_MESSAGE
-        );
+        JOptionPane.showMessageDialog(this, panel, "Alerta de Seguridad", JOptionPane.WARNING_MESSAGE);
     }
 
-    private void showError(String message) { 
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE); 
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
-    
-    private void showError(String message, Component parent) { 
-        JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE); 
+
+    private void showError(String message, Component parent) {
+        JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
-    
-    private void showMessage(String title, String message) { 
-        JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE); 
+
+    private void showMessage(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
     }
-    
-    private void showMessage(String title, String message, Component parent) { 
-        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.INFORMATION_MESSAGE); 
+
+    private void showMessage(String title, String message, Component parent) {
+        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void gestionarCSV() {
@@ -677,7 +806,6 @@ public class BancoUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Por favor, reinicia la aplicación para cargar los clientes del nuevo archivo.", "Reinicio Necesario", JOptionPane.INFORMATION_MESSAGE);
         }
     }
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
