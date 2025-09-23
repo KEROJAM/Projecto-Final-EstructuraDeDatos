@@ -1,111 +1,98 @@
-import java.io.*;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
+import java.io.PrintWriter;
 
-/**
- * Clase simple para cargar clientes desde archivos CSV
- * Formato del CSV: ID,Nombre,Monto,NumeroTarjeta
- */
 public class CSVClientLoader {
-    
+
     /**
-     * Carga clientes desde un archivo CSV
-     * @param archivo Ruta del archivo CSV
-     * @param tabla HashTable donde almacenar los clientes
-     * @return Número de clientes cargados
+     * Carga clientes desde un archivo CSV a una HashTable.
+     * El formato esperado del CSV es: ID,Nombre,Monto,NumeroTarjeta,Contraseña
+     * @param rutaArchivo La ruta del archivo CSV.
+     * @param clientesTable La tabla hash donde se cargarán los clientes.
+     * @return El número de clientes nuevos cargados.
      */
-    public static int cargarClientes(String archivo, HashTable tabla) {
+    public static int cargarClientes(String rutaArchivo, HashTable clientesTable) {
         int clientesCargados = 0;
-        
-        try {
-            File file = new File(archivo);
-            Scanner scanner = new Scanner(file);
-            
-            // Saltar la primera línea (encabezados)
-            if (scanner.hasNextLine()) {
-                scanner.nextLine();
-            }
-            
-            // Leer cada línea del archivo
-            while (scanner.hasNextLine()) {
-                String linea = scanner.nextLine().trim();
-                
-                if (linea.isEmpty()) {
-                    continue; // Saltar líneas vacías
-                }
-                
-                try {
-                    // Dividir la línea por comas
-                    String[] datos = linea.split(",");
-                    
-                    if (datos.length >= 4) {
+        String linea;
+        File archivo = new File(rutaArchivo);
+
+        if (!archivo.exists()) {
+            System.err.println("El archivo CSV no existe en la ruta: " + rutaArchivo);
+            return 0;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
+            // Omitir la cabecera si existe
+            br.readLine();
+            while ((linea = br.readLine()) != null) {
+                if (linea.trim().isEmpty()) continue;
+                String[] datos = linea.split(",");
+                if (datos.length == 5) {
+                    try {
                         int id = Integer.parseInt(datos[0].trim());
                         String nombre = datos[1].trim();
                         int monto = Integer.parseInt(datos[2].trim());
-                        String tarjeta = datos[3].trim();
-                        
-                        // Crear nuevo cliente
-                        Cliente cliente = new Cliente(id, nombre, monto, tarjeta);
-                        
-                        // Si hay un quinto campo (monto ahorros), agregarlo
-                        if (datos.length >= 5) {
-                            try {
-                                int ahorros = Integer.parseInt(datos[4].trim());
-                                cliente.montoAhorros = ahorros;
-                            } catch (NumberFormatException e) {
-                                // Si no se puede parsear, dejar en 0
-                            }
-                        }
-                        
-                        // Agregar a la tabla si no existe
-                        if (!tabla.contains(tarjeta)) {
-                            tabla.put(tarjeta, cliente);
+                        String numeroTarjeta = datos[3].trim();
+                        String contrasena = datos[4].trim();
+
+                        if (!clientesTable.contains(numeroTarjeta)) {
+                            Cliente nuevoCliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena);
+                            clientesTable.put(numeroTarjeta, nuevoCliente);
                             clientesCargados++;
-                            System.out.println("Cliente cargado: " + nombre + " (" + tarjeta + ")");
-                        } else {
-                            System.out.println("Cliente ya existe: " + nombre + " (" + tarjeta + ")");
                         }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error de formato en línea CSV: " + linea);
                     }
-                } catch (Exception e) {
-                    System.out.println("Error procesando línea: " + linea);
                 }
             }
-            
-            scanner.close();
-            
-        } catch (FileNotFoundException e) {
-            System.out.println("Archivo no encontrado: " + archivo);
-            return 0;
-        } catch (Exception e) {
-            System.out.println("Error leyendo archivo: " + e.getMessage());
-            return 0;
+        } catch (IOException e) {
+            System.err.println("Error al leer el archivo CSV: " + e.getMessage());
         }
-        
         return clientesCargados;
     }
-    
+
     /**
-     * Crea un archivo CSV de ejemplo
-     * @param rutaArchivo Donde crear el archivo
+     * Guarda un nuevo cliente en el archivo CSV. Si el archivo no existe, lo crea.
+     * @param cliente El cliente a guardar.
+     * @param rutaArchivo La ruta del archivo CSV.
+     */
+    public static void guardarCliente(Cliente cliente, String rutaArchivo) {
+        File archivo = new File(rutaArchivo);
+        boolean existe = archivo.exists();
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo, true))) {
+            if (!existe || archivo.length() == 0) {
+                writer.println("ID,Nombre,Monto,NumeroTarjeta,Contraseña");
+            }
+            writer.printf("%d,%s,%d,%s,%s\n",
+                    cliente.ID,
+                    cliente.Nombre,
+                    cliente.Monto,
+                    cliente.NumeroTarjeta,
+                    cliente.getContraseña());
+        } catch (IOException e) {
+            System.err.println("Error al guardar el cliente en el archivo CSV: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Crea un archivo CSV de ejemplo con datos de clientes, incluyendo contraseñas.
+     * @param rutaArchivo La ruta donde se guardará el archivo de ejemplo.
      */
     public static void crearEjemplo(String rutaArchivo) {
-        try {
-            PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo));
-            
-            // Escribir encabezados
-            writer.println("ID,Nombre,Monto,NumeroTarjeta,MontoAhorros");
-            
-            // Escribir datos de ejemplo
-            writer.println("6,Ana Martinez,5000,4532015112830366,1000");
-            writer.println("7,Luis Garcia,7500,5555555555554444,500");
-            writer.println("8,Carmen Lopez,3200,4111111111111111,0");
-            writer.println("9,Pedro Silva,9800,4000000000000002,2000");
-            writer.println("10,Maria Ruiz,6400,4242424242424242,800");
-            
-            writer.close();
-            System.out.println("Archivo de ejemplo creado: " + rutaArchivo);
-            
+        try (FileWriter writer = new FileWriter(rutaArchivo)) {
+            writer.append("ID,Nombre,Monto,NumeroTarjeta,Contraseña\n");
+            writer.append("1,Juan Perez,7500,5201169781530257,juan123\n");
+            writer.append("2,Maria Garcia,12000,4509297861614535,maria456\n");
+            writer.append("3,Carlos Lopez,3500,4555061037596247,carlos789\n");
+            writer.append("4,Ana Rodriguez,9800,4915762317479773,ana012\n");
+            writer.append("5,Pedro Martinez,15000,5161034964107141,pedro345\n");
         } catch (IOException e) {
-            System.out.println("Error creando archivo de ejemplo: " + e.getMessage());
+            System.err.println("Error al crear el archivo CSV de ejemplo: " + e.getMessage());
         }
     }
 }

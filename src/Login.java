@@ -1,24 +1,18 @@
-// Archivo: Login.java
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class Login {
     private HashTable clientesTable;
-    // Se elimina la dependencia de Map y se usará HashTable para todo
-    // private Map<String, String> usuariosRegistrados;
-
-    // Se reemplaza List<Cliente> por la clase LinkedList proporcionada
     private LinkedList listaClientes;
 
     public Login(HashTable clientesTable) {
         this.clientesTable = clientesTable;
-        // this.usuariosRegistrados = new HashMap<>(); // Eliminado
-        this.listaClientes = new LinkedList(); // Se usa la LinkedList personalizada
+        this.listaClientes = new LinkedList();
         cargarUsuariosPredefinidos();
     }
 
     private void cargarUsuariosPredefinidos() {
-        // Cargar los 5 clientes predefinidos del sistema
+        // Clientes predefinidos con contraseñas
         String[] tarjetas = {
                 "5201169781530257", "4509297861614535", "4555061037596247",
                 "4915762317479773", "5161034964107141"
@@ -28,20 +22,15 @@ public class Login {
                 "Ana Rodriguez", "Pedro Martinez"
         };
         int[] saldos = {7500, 12000, 3500, 9800, 15000};
+        String[] contraseñas = {"juan123", "maria456", "carlos789", "ana012", "pedro345"};
 
         for (int i = 0; i < 5; i++) {
-            Cliente cliente = new Cliente(i + 1, nombres[i], saldos[i], tarjetas[i]);
+            Cliente cliente = new Cliente(i + 1, nombres[i], saldos[i], tarjetas[i], contraseñas[i]);
             clientesTable.put(tarjetas[i], cliente);
-
-            // Lógica para agregar a la LinkedList personalizada
             addClienteToList(cliente);
         }
     }
 
-    /**
-     * Método auxiliar para agregar un cliente a nuestra LinkedList personalizada.
-     * Simula el comportamiento de .add() de un ArrayList.
-     */
     private void addClienteToList(Cliente cliente) {
         Node<Cliente> newNode = new Node<>(cliente);
         if (listaClientes.firstNode == null) {
@@ -55,27 +44,38 @@ public class Login {
         }
     }
 
-    public Cliente iniciarSesion(BufferedReader reader) {
+    public Cliente mostrarMenuPrincipal(BufferedReader reader) {
         try {
-            System.out.println("╭──────────────────────────────────╮");
-            System.out.println("│          INICIO DE SESIÓN        │");
-            System.out.println("├──────────────────────────────────┤");
-            System.out.println("│ 1. Ya estoy registrado           │");
-            System.out.println("│ 2. Registrarme como nuevo usuario│");
-            System.out.println("╰──────────────────────────────────╯");
-            System.out.print("  Seleccione opción: ");
+            while (true) {
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║      BANCO FINANCIERO - MENÚ     ║");
+                System.out.println("╠══════════════════════════════════╣");
+                System.out.println("║  1. Iniciar Sesión               ║");
+                System.out.println("║  2. Registrarse                  ║");
+                System.out.println("║  3. Opciones Avanzadas           ║");
+                System.out.println("║  0. Salir                        ║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("  Seleccione una opción: ");
 
-            int opcion = Integer.parseInt(reader.readLine());
+                int opcion = Integer.parseInt(reader.readLine());
 
-            switch (opcion) {
-                case 1:
-                    return loginUsuarioExistente(reader);
-                case 2:
-                    registrarNuevoUsuario(reader);
-                    return null; // Siempre retorna null después de registro
-                default:
-                    System.out.println("Opción no válida");
-                    return null;
+                switch (opcion) {
+                    case 1:
+                        Cliente cliente = iniciarSesion(reader);
+                        if (cliente != null) return cliente;
+                        break;
+                    case 2:
+                        registrarNuevoUsuario(reader);
+                        break;
+                    case 3:
+                        mostrarOpcionesAvanzadas(reader);
+                        break;
+                    case 0:
+                        System.out.println("¡Gracias por usar Banco Financiero!");
+                        return null;
+                    default:
+                        System.out.println("Opción no válida. Intente nuevamente.");
+                }
             }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
@@ -83,68 +83,78 @@ public class Login {
         }
     }
 
-    private Cliente loginUsuarioExistente(BufferedReader reader) {
+    private Cliente iniciarSesion(BufferedReader reader) {
         try {
-            System.out.println("\n╭──────────────────────────────────╮");
-            System.out.println("│        INICIAR SESIÓN            │");
-            System.out.println("╰──────────────────────────────────╯");
-
-            System.out.print("  Nombre completo: ");
-            String nombreCompleto = reader.readLine();
+            System.out.println("\n╔══════════════════════════════════╗");
+            System.out.println("║          INICIAR SESIÓN          ║");
+            System.out.println("╚══════════════════════════════════╝");
 
             System.out.print("  Nº Tarjeta (16 dígitos): ");
             String tarjetaUsuario = reader.readLine();
 
+            System.out.print("  Contraseña: ");
+            String contraseña = reader.readLine();
+
             // Validar tarjeta con algoritmo de Luhn
             if (!ValidadorTarjeta.validarTarjeta(tarjetaUsuario)) {
-                System.out.println("   ╔══════════════════════════════╗");
-                System.out.println("   ║      Tarjeta inválida!       ║");
-                System.out.println("   ║ Verifique el número ingresado║");
-                System.out.println("   ╚══════════════════════════════╝");
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║        TARJETA INVÁLIDA          ║");
+                System.out.println("║  Verifique el número ingresado   ║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
                 return null;
             }
 
-            // Se usa el método get de HashTable para buscar al cliente.
+            // Buscar cliente en la HashTable
             Cliente clienteEncontrado = clientesTable.get(tarjetaUsuario);
 
-            // Verificar si el usuario está registrado
+            // Verificar si el usuario existe
             if (clienteEncontrado == null) {
-                System.out.println("   ╔══════════════════════════════╗");
-                System.out.println("   ║  Usuario no registrado       ║");
-                System.out.println("   ║  Por favor regístrese primero║");
-                System.out.println("   ╚══════════════════════════════╝");
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║      USUARIO NO ENCONTRADO       ║");
+                System.out.println("║   Por favor regístrese primero   ║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
                 return null;
             }
 
-            // Verificar que el nombre coincida con el cliente encontrado en la HashTable
-            if (!clienteEncontrado.Nombre.equalsIgnoreCase(nombreCompleto)) {
-                System.out.println("   ╔══════════════════════════════╗");
-                System.out.println("   ║  Nombre y tarjeta no coinciden║");
-                System.out.println("   ╚══════════════════════════════╝");
+            // Verificar contraseña
+            if (!clienteEncontrado.validarContraseña(contraseña)) {
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║       CONTRASEÑA INCORRECTA      ║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
                 return null;
             }
 
-            // A este punto, el cliente es válido. Ahora verificamos la sesión.
+            // Verificar si ya tiene sesión activa
             if (clienteEncontrado.isSesionActiva()) {
-                System.out.println("   ╔══════════════════════════════╗");
-                System.out.println("   ║  Sesión ya activa            ║");
-                System.out.println("   ║  No puede iniciar sesión     ║");
-                System.out.println("   ║  nuevamente                  ║");
-                System.out.println("   ╚══════════════════════════════╝");
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║       SESIÓN YA ACTIVA           ║");
+                System.out.println("║  No puede iniciar sesión nuevamente║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
                 return null;
             }
 
-            // Marcar sesión como activa
+            // Iniciar sesión exitosamente
             clienteEncontrado.iniciarSesion();
 
             String tipoTarjeta = ValidadorTarjeta.obtenerTipoTarjeta(tarjetaUsuario);
             String tarjetaEnmascarada = ValidadorTarjeta.enmascararTarjeta(tarjetaUsuario);
 
-            System.out.println("   ╠══════════════════════════════╣");
-            System.out.println("   ║ Tarjeta " + tipoTarjeta + " válida       ");
-            System.out.println("   ║ " + tarjetaEnmascarada + "         ");
-            System.out.println("   ║ Bienvenido: " + String.format("%-15s", nombreCompleto));
-            System.out.println("   ╚══════════════════════════════╝");
+            System.out.println("\n╔══════════════════════════════════╗");
+            System.out.println("║        INICIO EXITOSO            ║");
+            System.out.println("╠══════════════════════════════════╣");
+            System.out.println("║ Tarjeta " + tipoTarjeta + " válida");
+            System.out.println("║ " + tarjetaEnmascarada);
+            System.out.println("║ Bienvenido: " + clienteEncontrado.Nombre);
+            System.out.println("║ ID: " + clienteEncontrado.ID + " (interno)");
+            System.out.println("╚══════════════════════════════════╝");
 
             System.out.print("Presione Enter para continuar...");
             reader.readLine();
@@ -153,15 +163,19 @@ public class Login {
 
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
+            try {
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
+            } catch (Exception ex) {}
             return null;
         }
     }
 
     private void registrarNuevoUsuario(BufferedReader reader) {
         try {
-            System.out.println("\n╭──────────────────────────────────╮");
-            System.out.println("│        REGISTRO DE USUARIO       │");
-            System.out.println("╰──────────────────────────────────╯");
+            System.out.println("\n╔══════════════════════════════════╗");
+            System.out.println("║         REGISTRO DE USUARIO      ║");
+            System.out.println("╚══════════════════════════════════╝");
 
             System.out.print("  Nombre completo: ");
             String nombreCompleto = reader.readLine();
@@ -169,23 +183,48 @@ public class Login {
             System.out.print("  Nº Tarjeta (16 dígitos): ");
             String tarjetaUsuario = reader.readLine();
 
-            // Validar tarjeta con algoritmo de Luhn
-            if (!ValidadorTarjeta.validarTarjeta(tarjetaUsuario)) {
-                System.out.println("   ╔══════════════════════════════╗");
-                System.out.println("   ║      Tarjeta inválida!       ║");
-                System.out.println("   ║ Verifique el número ingresado║");
-                System.out.println("   ╚══════════════════════════════╝");
+            System.out.print("  Contraseña: ");
+            String contraseña = reader.readLine();
+
+            System.out.print("  Confirmar contraseña: ");
+            String confirmacionContraseña = reader.readLine();
+
+            // Validaciones
+            if (!contraseña.equals(confirmacionContraseña)) {
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║   LAS CONTRASEÑAS NO COINCIDEN   ║");
+                System.out.println("╚══════════════════════════════════╝");
                 System.out.print("Presione Enter para continuar...");
                 reader.readLine();
                 return;
             }
 
-            // Verificar si la tarjeta ya está registrada usando la HashTable
+            if (contraseña.length() < 4) {
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║ CONTRASEÑA MUY CORTA (mín. 4)    ║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
+                return;
+            }
+
+            // Validar tarjeta
+            if (!ValidadorTarjeta.validarTarjeta(tarjetaUsuario)) {
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║        TARJETA INVÁLIDA          ║");
+                System.out.println("║  Verifique el número ingresado   ║");
+                System.out.println("╚══════════════════════════════════╝");
+                System.out.print("Presione Enter para continuar...");
+                reader.readLine();
+                return;
+            }
+
+            // Verificar si la tarjeta ya está registrada
             if (clientesTable.contains(tarjetaUsuario)) {
-                System.out.println("   ╔══════════════════════════════╗");
-                System.out.println("   ║  Esta tarjeta ya está        ║");
-                System.out.println("   ║  registrada en el sistema    ║");
-                System.out.println("   ╚══════════════════════════════╝");
+                System.out.println("\n╔══════════════════════════════════╗");
+                System.out.println("║   TARJETA YA REGISTRADA          ║");
+                System.out.println("║  Esta tarjeta ya está en uso     ║");
+                System.out.println("╚══════════════════════════════════╝");
                 System.out.print("Presione Enter para continuar...");
                 reader.readLine();
                 return;
@@ -193,26 +232,26 @@ public class Login {
 
             // Crear nuevo cliente con saldo inicial de 1000
             int nuevoID = getTotalClientes() + 1;
-            Cliente nuevoCliente = new Cliente(nuevoID, nombreCompleto, 1000, tarjetaUsuario);
+            Cliente nuevoCliente = new Cliente(nuevoID, nombreCompleto, 1000, tarjetaUsuario, contraseña);
 
-            // Agregar a la tabla hash y a la lista personalizada
+            // Agregar a la tabla hash y a la lista
             clientesTable.put(tarjetaUsuario, nuevoCliente);
             addClienteToList(nuevoCliente);
 
             String tipoTarjeta = ValidadorTarjeta.obtenerTipoTarjeta(tarjetaUsuario);
             String tarjetaEnmascarada = ValidadorTarjeta.enmascararTarjeta(tarjetaUsuario);
 
-            System.out.println("   ╔══════════════════════════════╗");
-            System.out.println("   ║     REGISTRO EXITOSO         ║");
-            System.out.println("   ╠══════════════════════════════╣");
-            System.out.println("   ║ Tarjeta " + tipoTarjeta + " válida       ");
-            System.out.println("   ║ " + tarjetaEnmascarada + "         ");
-            System.out.println("   ║ Bienvenido: " + String.format("%-15s", nombreCompleto));
-            System.out.println("   ║ Saldo inicial: $1000         ");
-            System.out.println("   ╚══════════════════════════════╝");
+            System.out.println("\n╔══════════════════════════════════╗");
+            System.out.println("║       REGISTRO EXITOSO          ║");
+            System.out.println("╠══════════════════════════════════╣");
+            System.out.println("║ Tarjeta " + tipoTarjeta + " válida");
+            System.out.println("║ " + tarjetaEnmascarada);
+            System.out.println("║ Usuario: " + nombreCompleto);
+            System.out.println("║ ID asignado: " + nuevoID + " (interno)");
+            System.out.println("║ Saldo inicial: $1000");
+            System.out.println("╚══════════════════════════════════╝");
 
-            System.out.println("   ║ Será redirigido al inicio de sesión");
-            System.out.print("   ║ Presione Enter para continuar...");
+            System.out.print("Presione Enter para continuar...");
             reader.readLine();
 
         } catch (Exception e) {
@@ -224,84 +263,120 @@ public class Login {
         }
     }
 
-    // ----- MÉTODOS ADAPTADOS PARA USAR LA LINKEDLIST PERSONALIZADA -----
+    private void mostrarOpcionesAvanzadas(BufferedReader reader) {
+        try {
+            System.out.println("\n╔══════════════════════════════════╗");
+            System.out.println("║       OPCIONES AVANZADAS        ║");
+            System.out.println("╠══════════════════════════════════╣");
+            System.out.println("║  1. Estado de Sesiones          ║");
+            System.out.println("║  2. Cerrar Todas las Sesiones   ║");
+            System.out.println("║  3. Ver Usuarios Registrados    ║");
+            System.out.println("║  0. Volver al Menú Principal    ║");
+            System.out.println("╚══════════════════════════════════╝");
+            System.out.print("  Seleccione una opción: ");
 
-    // Método para cerrar sesión de un cliente
-    public void cerrarSesion(Cliente cliente) {
-        if (cliente != null) {
-            cliente.cerrarSesion();
-            System.out.println("   ║ Sesión cerrada exitosamente para: " + cliente.Nombre);
+            int opcion = Integer.parseInt(reader.readLine());
+
+            switch (opcion) {
+                case 1:
+                    mostrarEstadoSesiones();
+                    break;
+                case 2:
+                    cerrarTodasLasSesiones();
+                    break;
+                case 3:
+                    mostrarUsuariosRegistrados();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+
+            System.out.print("Presione Enter para continuar...");
+            reader.readLine();
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
-    // Método para forzar cierre de todas las sesiones
+    // Métodos auxiliares (se mantienen igual)
+    public void cerrarSesion(Cliente cliente) {
+        if (cliente != null) {
+            cliente.cerrarSesion();
+            System.out.println("Sesión cerrada exitosamente para: " + cliente.Nombre);
+        }
+    }
+
     public void cerrarTodasLasSesiones() {
         Node<Cliente> current = listaClientes.firstNode;
+        int cerradas = 0;
         while (current != null) {
             Cliente cliente = current.getData();
             if (cliente.isSesionActiva()) {
                 cliente.cerrarSesion();
+                cerradas++;
             }
             current = current.next;
         }
-        System.out.println("   ║ Todas las sesiones han sido cerradas");
+        System.out.println("Se cerraron " + cerradas + " sesiones activas.");
     }
 
-    // Método para verificar estado de sesiones
     public void mostrarEstadoSesiones() {
-        System.out.println("   ╔══════════════════════════════╗");
-        System.out.println("   ║     ESTADO DE SESIONES       ║");
-        System.out.println("   ╠══════════════════════════════╣");
+        System.out.println("\n╔══════════════════════════════════╗");
+        System.out.println("║        ESTADO DE SESIONES       ║");
+        System.out.println("╠══════════════════════════════════╣");
 
         int sesionesActivas = 0;
         Node<Cliente> current = listaClientes.firstNode;
         while (current != null) {
             Cliente cliente = current.getData();
             if (cliente.isSesionActiva()) {
-                System.out.println("   ║ " + cliente.Nombre + " - SESIÓN ACTIVA");
+                System.out.println("║ " + cliente.Nombre + " - ACTIVA");
                 sesionesActivas++;
             }
             current = current.next;
         }
 
         if (sesionesActivas == 0) {
-            System.out.println("   ║ No hay sesiones activas");
+            System.out.println("║ No hay sesiones activas");
         }
 
-        System.out.println("   ╠══════════════════════════════╣");
-        System.out.println("   ║ Total de sesiones activas: " + sesionesActivas);
-        System.out.println("   ╚══════════════════════════════╝");
+        System.out.println("╠══════════════════════════════════╣");
+        System.out.println("║ Total de sesiones activas: " + sesionesActivas);
+        System.out.println("╚══════════════════════════════════╝");
     }
 
-    // Método para obtener cliente por tarjeta (usa HashTable, más eficiente)
+    public void mostrarUsuariosRegistrados() {
+        System.out.println("\n╔══════════════════════════════════╗");
+        System.out.println("║      USUARIOS REGISTRADOS       ║");
+        System.out.println("╠══════════════════════════════════╣");
+
+        Node<Cliente> current = listaClientes.firstNode;
+        while (current != null) {
+            Cliente cliente = current.getData();
+            System.out.println("║ ID: " + cliente.ID + " - " + cliente.Nombre);
+            current = current.next;
+        }
+
+        System.out.println("╠══════════════════════════════════╣");
+        System.out.println("║ Total: " + getTotalClientes() + " usuarios");
+        System.out.println("╚══════════════════════════════════╝");
+    }
+
     public Cliente obtenerClientePorTarjeta(String numeroTarjeta) {
         return clientesTable.get(numeroTarjeta);
     }
 
-    // Método para obtener cliente por nombre
-    public Cliente obtenerClientePorNombre(String nombre) {
-        Node<Cliente> current = listaClientes.firstNode;
-        while (current != null) {
-            Cliente cliente = current.getData();
-            if (cliente.Nombre.equalsIgnoreCase(nombre)) {
-                return cliente;
-            }
-            current = current.next;
-        }
-        return null;
-    }
-
-    // Método para verificar si un usuario existe
     public boolean existeUsuario(String numeroTarjeta) {
         return clientesTable.contains(numeroTarjeta);
     }
 
-    // Método para obtener la lista de clientes (devuelve la LinkedList)
     public LinkedList getListaClientes() {
         return listaClientes;
     }
 
-    // Método para obtener el número total de clientes registrados
     public int getTotalClientes() {
         int count = 0;
         Node current = listaClientes.firstNode;
