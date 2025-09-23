@@ -30,7 +30,7 @@ public class BancoUI extends JFrame {
     private static final Font FONT_HEADER = new Font("Segoe UI", Font.BOLD, 18);
     private static final Font FONT_BODY = new Font("Segoe UI", Font.PLAIN, 14);
     private static final Font FONT_BUTTON = new Font("Segoe UI", Font.BOLD, 14);
-
+    public boolean inusual;
     // =========================================================================
     // COMPONENTES DE LA INTERFAZ (FRONTEND)
     // =========================================================================
@@ -347,11 +347,16 @@ public class BancoUI extends JFrame {
 
 
     private void accionDepositar() {
+        if (clienteSesion.isTarjetaBloqueada()) {
+            showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
+            return;
+        }
+        
         String montoStr = JOptionPane.showInputDialog(this, "Ingrese el monto a depositar:", "Depósito", JOptionPane.PLAIN_MESSAGE);
         try {
             int monto = Integer.parseInt(montoStr);
             if (monto <= 0) { showError("El monto debe ser positivo."); return; }
-            clienteSesion.Depositar(monto);
+            inusual = clienteSesion.Depositar(monto);
             // MODIFICADO: Usa el historial del cliente
             clienteSesion.getPilaHistorial().push("Deposito: +$" + monto);
             actualizarInfoCliente();
@@ -360,6 +365,11 @@ public class BancoUI extends JFrame {
     }
 
     private void accionRetirar() {
+        if (clienteSesion.isTarjetaBloqueada()) {
+            showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
+            return;
+        }
+        
         String montoStr = JOptionPane.showInputDialog(this, "Ingrese el monto a retirar:", "Retiro", JOptionPane.PLAIN_MESSAGE);
         try {
             int monto = Integer.parseInt(montoStr);
@@ -374,6 +384,11 @@ public class BancoUI extends JFrame {
     }
 
     private void accionTransferir() {
+        if (clienteSesion.isTarjetaBloqueada()) {
+            showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
+            return;
+        }
+        
         JTextField tarjetaField = createStyledTextField(), NameField = createStyledTextField(), montoField = createStyledTextField();
         JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5)); panel.setBackground(COLOR_BACKGROUND);
         panel.add(new JLabel("Nº Tarjeta del Destinatario:")); panel.add(tarjetaField);
@@ -388,7 +403,8 @@ public class BancoUI extends JFrame {
                 if (!Objects.equals(destinatario.Nombre, NameDest)) { showError("El Nombre no corresponde al titular de la tarjeta."); return; }
                 if (monto <= 0 || monto > clienteSesion.Monto) { showError("Monto no válido o fondos insuficientes."); return; }
 
-                clienteSesion.Monto -= monto;
+                // Usar el método Transferir() del cliente para detectar actividad inusual
+                boolean esTransferenciaInusual = clienteSesion.Transferir(monto);
                 destinatario.Depositar(monto);
                 colaTransferencias.enqueue(monto);
 
@@ -401,9 +417,75 @@ public class BancoUI extends JFrame {
                 // -------------------------
 
                 actualizarInfoCliente();
-                showMessage("Éxito", "Transferencia realizada con éxito.");
+                if (!esTransferenciaInusual) {
+                    showMessage("Éxito", "Transferencia realizada con éxito.");
+                } else {
+                    mostrarDialogoTransferenciaSospechosa();
+                }
             } catch (Exception e) { showError("Datos inválidos. Verifique la información."); }
         }
+    }
+
+    private void mostrarDialogoTransferenciaSospechosa() {
+        JDialog dialog = new JDialog(this, "", true);
+        dialog.setSize(450, 200);
+        dialog.setLocationRelativeTo(this);
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.getContentPane().setBackground(COLOR_BACKGROUND);
+
+        // Panel del mensaje
+        JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
+        messagePanel.setBackground(COLOR_BACKGROUND);
+        messagePanel.setBorder(new EmptyBorder(20, 20, 10, 20));
+
+        JLabel titleLabel = new JLabel("Transferencia Sospechosa");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(200, 0, 0));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JTextArea messageArea = new JTextArea("Se ha detectado una transferencia sospechosa.\n\n" +
+                "Esta actividad podría indicar un posible fraude o uso no autorizado de su cuenta.\n" +
+                "¿Qué acción desea realizar?");
+        messageArea.setEditable(false);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+        messageArea.setBackground(COLOR_BACKGROUND);
+        messageArea.setFont(FONT_BODY);
+
+        messagePanel.add(titleLabel, BorderLayout.NORTH);
+        messagePanel.add(messageArea, BorderLayout.CENTER);
+
+        // Panel de botones
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonsPanel.setBackground(COLOR_BACKGROUND);
+
+        JButton bloquearButton = createStyledButton("Bloquear Tarjeta", COLOR_LOGOUT, COLOR_TEXT_LIGHT);
+        JButton ignorarButton = createStyledButton("Ignorar Mensaje", COLOR_ACCENT, COLOR_TEXT_LIGHT);
+
+        bloquearButton.addActionListener(e -> {
+            dialog.dispose(); // Cerrar el diálogo inmediatamente
+            clienteSesion.bloquearTarjeta();
+            showMessage("Tarjeta Bloqueada", 
+                "Su tarjeta ha sido bloqueada por seguridad debido a actividad sospechosa.\n" +
+                "Contacte al banco para desbloquearla.");
+            cerrarSesion();
+        });
+
+        ignorarButton.addActionListener(e -> {
+            dialog.dispose(); // Cerrar el diálogo inmediatamente
+            showMessage("Transferencia Completada", 
+                "La transferencia se ha completado exitosamente.\n" +
+                "Recomendamos monitorear su cuenta regularmente.");
+        });
+
+        buttonsPanel.add(bloquearButton);
+        buttonsPanel.add(ignorarButton);
+
+        dialog.add(messagePanel, BorderLayout.CENTER);
+        dialog.add(buttonsPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 
     private void mostrarDialogoCajaAhorros() {
@@ -536,23 +618,23 @@ public class BancoUI extends JFrame {
         
         // Icono de advertencia
         JLabel iconLabel = new JLabel(new ImageIcon("warning.png"));
-        
+
         // Panel para el mensaje
         JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
         JLabel titleLabel = new JLabel(titulo);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         titleLabel.setForeground(new Color(200, 0, 0)); // Rojo oscuro
-        
+
         JTextArea messageArea = new JTextArea(mensaje);
         messageArea.setEditable(false);
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         messageArea.setBackground(panel.getBackground());
         messageArea.setFont(FONT_BODY);
-        
+
         messagePanel.add(titleLabel, BorderLayout.NORTH);
         messagePanel.add(messageArea, BorderLayout.CENTER);
-        
+
         // Configurar el panel principal
         panel.add(iconLabel, BorderLayout.WEST);
         panel.add(messagePanel, BorderLayout.CENTER);

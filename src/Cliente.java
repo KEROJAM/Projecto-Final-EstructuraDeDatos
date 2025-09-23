@@ -12,6 +12,7 @@ public class Cliente {
     private static GrafoTransacciones grafoTransacciones = new GrafoTransacciones();
     private boolean posibleFraude; // Bandera para indicar posible actividad fraudulenta
     private transient BancoUI ui; // Referencia a la interfaz de usuario (transient para evitar problemas de serialización)
+    private boolean tarjetaBloqueada; // Bandera para indicar si la tarjeta está bloqueada
 
     public Cliente() {
         this.ID = 0;
@@ -21,6 +22,7 @@ public class Cliente {
         this.sesionActiva = false;
         this.contraseña = "";
         this.pilaHistorial = new Stack<>(); // AÑADIDO: Se inicializa el historial
+        this.tarjetaBloqueada = false;
     }
 
     public Cliente(int ID, String Nombre, int Monto, String NumeroTarjeta, String contraseña) {
@@ -31,6 +33,7 @@ public class Cliente {
         this.sesionActiva = false;
         this.contraseña = contraseña;
         this.pilaHistorial = new Stack<>(); // AÑADIDO: Se inicializa el historial
+        this.tarjetaBloqueada = false;
     }
 
     public Cliente(int monto, String transaccion, int i, String s) {
@@ -42,6 +45,11 @@ public class Cliente {
     }
 
     public boolean Depositar(int monto) {
+        if (this.tarjetaBloqueada) {
+            System.out.println("La tarjeta está bloqueada");
+            return false;
+        }
+        
         Transaccion transaccion = new Transaccion(
             "DEP-" + System.currentTimeMillis(),
             this.NumeroTarjeta,
@@ -61,6 +69,11 @@ public class Cliente {
     }
 
     public boolean Transferir(int monto) {
+        if (this.tarjetaBloqueada) {
+            System.out.println("La tarjeta está bloqueada");
+            return false;
+        }
+        
         if (monto > this.Monto) {
             System.out.println("Fondos insuficientes");
             return false;
@@ -146,5 +159,17 @@ public class Cliente {
         if (ui != null) {
             ui.mostrarAlertaFraude(titulo, mensaje);
         }
+    }
+
+    public void bloquearTarjeta() {
+        this.tarjetaBloqueada = true;
+    }
+
+    public void desbloquearTarjeta() {
+        this.tarjetaBloqueada = false;
+    }
+
+    public boolean isTarjetaBloqueada() {
+        return this.tarjetaBloqueada;
     }
 }
