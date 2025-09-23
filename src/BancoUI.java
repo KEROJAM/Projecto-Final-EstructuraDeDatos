@@ -481,15 +481,12 @@ public class BancoUI extends JFrame {
         try {
             int monto = Integer.parseInt(montoStr);
             if (monto <= 0) { showError("El monto debe ser positivo."); return; }
-<<<<<<< HEAD
             inusual = clienteSesion.Depositar(monto);
             // MODIFICADO: Usa el historial del cliente
             clienteSesion.getPilaHistorial().push("Deposito: +$" + monto);
-=======
             clienteSesion.Depositar(monto);
             // MODIFICADO: Añade registro con fecha y hora
             clienteSesion.getPilaHistorial().push("Deposito: +$" + monto + " [" + getTimestamp() + "]");
->>>>>>> 390cd6aa17a9ede0c97c40d327edeec55cc7ee24
             actualizarInfoCliente();
             showMessage("Éxito", "Depósito de $" + monto + " realizado con éxito.");
         } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
@@ -742,36 +739,24 @@ public class BancoUI extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
         JLabel iconLabel = new JLabel(new ImageIcon("warning.png"));
-<<<<<<< HEAD
 
         // Panel para el mensaje
-        JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
         JLabel titleLabel = new JLabel(titulo);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        titleLabel.setForeground(new Color(200, 0, 0)); // Rojo oscuro
-
-=======
         JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
-        JLabel titleLabel = new JLabel(titulo);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         titleLabel.setForeground(new Color(200, 0, 0));
->>>>>>> 390cd6aa17a9ede0c97c40d327edeec55cc7ee24
         JTextArea messageArea = new JTextArea(mensaje);
         messageArea.setEditable(false);
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         messageArea.setBackground(panel.getBackground());
         messageArea.setFont(FONT_BODY);
-<<<<<<< HEAD
-
         messagePanel.add(titleLabel, BorderLayout.NORTH);
         messagePanel.add(messageArea, BorderLayout.CENTER);
 
         // Configurar el panel principal
-=======
         messagePanel.add(titleLabel, BorderLayout.NORTH);
         messagePanel.add(messageArea, BorderLayout.CENTER);
->>>>>>> 390cd6aa17a9ede0c97c40d327edeec55cc7ee24
         panel.add(iconLabel, BorderLayout.WEST);
         panel.add(messagePanel, BorderLayout.CENTER);
         JOptionPane.showMessageDialog(this, panel, "Alerta de Seguridad", JOptionPane.WARNING_MESSAGE);
