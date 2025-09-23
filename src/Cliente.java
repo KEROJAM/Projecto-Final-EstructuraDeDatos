@@ -11,6 +11,7 @@ public class Cliente {
     public Stack<String> pilaHistorial;
     private static GrafoTransacciones grafoTransacciones = new GrafoTransacciones();
     private boolean posibleFraude; // Bandera para indicar posible actividad fraudulenta
+    private transient BancoUI ui; // Referencia a la interfaz de usuario (transient para evitar problemas de serialización)
 
     public Cliente() {
         this.ID = 0;
@@ -133,5 +134,17 @@ public class Cliente {
 
     public void cerrarSesion() {
         this.sesionActiva = false;
+    }
+    
+    // Establece la referencia a la interfaz de usuario
+    public void setUI(BancoUI ui) {
+        this.ui = ui;
+    }
+    
+    // Muestra una alerta de fraude en la interfaz de usuario si está disponible
+    private void mostrarAlertaFraude(String titulo, String mensaje) {
+        if (ui != null) {
+            ui.mostrarAlertaFraude(titulo, mensaje);
+        }
     }
 }

@@ -287,7 +287,8 @@ public class BancoUI extends JFrame {
             return;
         }
         clienteSesion = clienteEncontrado;
-        // pilaHistorial.clear(); // ELIMINADO: Ya no se limpia el historial
+        // Establecer la referencia a la interfaz de usuario
+        clienteSesion.setUI(this);
         actualizarInfoCliente();
         cardLayout.show(mainPanel, "MainMenu");
         showMessage("Inicio de sesión exitoso", "Bienvenido, " + clienteSesion.Nombre);
@@ -528,10 +529,58 @@ public class BancoUI extends JFrame {
         UIManager.put("Button.foreground", COLOR_TEXT_LIGHT); UIManager.put("Button.font", FONT_BUTTON);
     }
 
-    private void showError(String message) { JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE); }
-    private void showError(String message, Component parent) { JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE); }
-    private void showMessage(String title, String message) { JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE); }
-    private void showMessage(String title, String message, Component parent) { JOptionPane.showMessageDialog(parent, message, title, JOptionPane.INFORMATION_MESSAGE); }
+    public void mostrarAlertaFraude(String titulo, String mensaje) {
+        // Crear un panel personalizado para el mensaje
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        
+        // Icono de advertencia
+        JLabel iconLabel = new JLabel(new ImageIcon("warning.png"));
+        
+        // Panel para el mensaje
+        JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
+        JLabel titleLabel = new JLabel(titulo);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(200, 0, 0)); // Rojo oscuro
+        
+        JTextArea messageArea = new JTextArea(mensaje);
+        messageArea.setEditable(false);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+        messageArea.setBackground(panel.getBackground());
+        messageArea.setFont(FONT_BODY);
+        
+        messagePanel.add(titleLabel, BorderLayout.NORTH);
+        messagePanel.add(messageArea, BorderLayout.CENTER);
+        
+        // Configurar el panel principal
+        panel.add(iconLabel, BorderLayout.WEST);
+        panel.add(messagePanel, BorderLayout.CENTER);
+        
+        // Mostrar el diálogo
+        JOptionPane.showMessageDialog(
+            this,
+            panel,
+            "Alerta de Seguridad",
+            JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    private void showError(String message) { 
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE); 
+    }
+    
+    private void showError(String message, Component parent) { 
+        JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE); 
+    }
+    
+    private void showMessage(String title, String message) { 
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE); 
+    }
+    
+    private void showMessage(String title, String message, Component parent) { 
+        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.INFORMATION_MESSAGE); 
+    }
 
     private void gestionarCSV() {
         int userSelection = JOptionPane.showConfirmDialog(this,
