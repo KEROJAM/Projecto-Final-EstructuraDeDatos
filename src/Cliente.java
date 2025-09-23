@@ -11,7 +11,7 @@ public class Cliente {
     public Stack<String> pilaHistorial;
     private static GrafoTransacciones grafoTransacciones = new GrafoTransacciones();
     private boolean posibleFraude; // Bandera para indicar posible actividad fraudulenta
-    private transient BancoUI ui; // Referencia a la interfaz de usuario (transient para evitar problemas de serialización)
+    public transient BancoUI ui; // Referencia a la interfaz de usuario (transient para evitar problemas de serialización)
     private boolean tarjetaBloqueada; // Bandera para indicar si la tarjeta está bloqueada
 
     public Cliente() {
@@ -64,7 +64,6 @@ public class Cliente {
         }
         
         this.Monto += monto;
-        this.pilaHistorial.push("Depósito de $" + monto);
         return this.posibleFraude;
     }
 
