@@ -1,4 +1,3 @@
-// Archivo: HashTable.java (simplificado)
 import java.util.LinkedList;
 
 public class HashTable {
@@ -44,16 +43,18 @@ public class HashTable {
                 return cliente;
             }
         }
-
         return null;
     }
 
-    public boolean contains(String tarjeta) {
-        return get(tarjeta) != null;
+    // Nuevo: Método para obtener todos los clientes
+    public Cliente[] obtenerTodosLosClientes() {
+        Cliente[] clientes = new Cliente[size];
+        int i = 0;
+        for (LinkedList<Cliente> list : table) {
+            for (Cliente cliente : list) {
+                clientes[i++] = cliente;
+            }
+        }
+        return clientes;
     }
-
-    public int size() {
-        return size;
-    }
-
 }
