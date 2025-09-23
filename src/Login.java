@@ -1,5 +1,7 @@
 // Archivo: Login.java
 import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Login {
@@ -14,11 +16,58 @@ public class Login {
         this.clientesTable = clientesTable;
         // this.usuariosRegistrados = new HashMap<>(); // Eliminado
         this.listaClientes = new LinkedList(); // Se usa la LinkedList personalizada
-        cargarUsuariosPredefinidos();
+        cargarClientesDesdeCSV();
+    }
+
+    private void cargarClientesDesdeCSV() {
+        String csvFile = "src/clientes.csv";
+        String line;
+        String csvSplitBy = ",";
+        
+        try (BufferedReader br = new FileReader(csvFile)) {
+            // Saltar la primera línea (encabezados)
+            br.readLine();
+            
+            while ((line = br.readLine()) != null && !line.trim().isEmpty()) {
+                // Dividir la línea por comas
+                String[] clienteData = line.split(csvSplitBy);
+                
+                if (clienteData.length >= 5) {
+                    try {
+                        int id = Integer.parseInt(clienteData[0].trim());
+                        String nombre = clienteData[1].trim();
+                        int monto = Integer.parseInt(clienteData[2].trim());
+                        String numeroTarjeta = clienteData[3].trim();
+                        int montoAhorros = Integer.parseInt(clienteData[4].trim());
+                        
+                        // Crear cliente con constructor existente
+                        Cliente cliente = new Cliente(id, nombre, monto, numeroTarjeta);
+                        // Asignar el monto de ahorros
+                        cliente.montoAhorros = montoAhorros;
+                        
+                        // Agregar a la HashTable usando numeroTarjeta como clave
+                        clientesTable.put(numeroTarjeta, cliente);
+                        
+                        // Agregar a la LinkedList personalizada
+                        addClienteToList(cliente);
+                        
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error al parsear datos numéricos en línea: " + line);
+                    }
+                }
+            }
+            
+            System.out.println("Clientes cargados exitosamente desde CSV");
+            
+        } catch (IOException e) {
+            System.err.println("Error al leer el archivo CSV: " + e.getMessage());
+            System.err.println("Cargando clientes predefinidos como respaldo...");
+            cargarUsuariosPredefinidos();
+        }
     }
 
     private void cargarUsuariosPredefinidos() {
-        // Cargar los 5 clientes predefinidos del sistema
+        // Método de respaldo en caso de que falle la carga del CSV
         String[] tarjetas = {
                 "5201169781530257", "4509297861614535", "4555061037596247",
                 "4915762317479773", "5161034964107141"
