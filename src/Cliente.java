@@ -1,12 +1,16 @@
+import java.util.Stack;
+
 public class Cliente {
-    int ID;
-    String Nombre;
-    int Monto;
-    String NumeroTarjeta;
+    public int ID;
+    public String Nombre;
+    public int Monto;
+    public String NumeroTarjeta;
     public int montoAhorros;
-    boolean sesionActiva;
-    String contraseña;
-    Stack<String> pilaHistorial; // AÑADIDO: Cada cliente tiene su propio historial
+    public boolean sesionActiva;
+    public String contraseña;
+    public Stack<String> pilaHistorial;
+    private static GrafoTransacciones grafoTransacciones = new GrafoTransacciones();
+    private boolean posibleFraude; // Bandera para indicar posible actividad fraudulenta
 
     public Cliente() {
         this.ID = 0;
@@ -36,17 +40,68 @@ public class Cliente {
         return this.pilaHistorial;
     }
 
-    public void Depositar(int Monto){
-        this.Monto += Monto;
+    public boolean Depositar(int monto) {
+        Transaccion transaccion = new Transaccion(
+            "DEP-" + System.currentTimeMillis(),
+            this.NumeroTarjeta,
+            monto,
+            "DEPOSITO"
+        );
+        
+        // Verificar posible fraude
+        if (grafoTransacciones.agregarTransaccion(transaccion)) {
+            this.posibleFraude = true;
+            System.out.println("¡ADVERTENCIA: Se detectó actividad inusual en su cuenta!");
+        }
+        
+        this.Monto += monto;
+        this.pilaHistorial.push("Depósito de $" + monto);
+        return this.posibleFraude;
     }
 
-    public void Transferir(int Monto){
-        this.Monto -= Monto;
+    public boolean Transferir(int monto) {
+        if (monto > this.Monto) {
+            System.out.println("Fondos insuficientes");
+            return false;
+        }
+        
+        Transaccion transaccion = new Transaccion(
+            "TRA-" + System.currentTimeMillis(),
+            this.NumeroTarjeta,
+            monto,
+            "TRANSFERENCIA"
+        );
+        
+        // Verificar posible fraude
+        if (grafoTransacciones.agregarTransaccion(transaccion)) {
+            this.posibleFraude = true;
+            System.out.println("¡ADVERTENCIA: Se detectó actividad inusual en su cuenta!");
+        }
+        
+        this.Monto -= monto;
+        this.pilaHistorial.push("Transferencia de $" + monto);
+        return this.posibleFraude;
     }
 
     public boolean validarContraseña(String contraseñaIngresada) {
         return this.contraseña.equals(contraseñaIngresada);
     }
+    
+    public boolean hayPosibleFraude() {
+        return this.posibleFraude;
+    }
+    
+    public void resetearAlertaFraude() {
+        this.posibleFraude = false;
+    }
+    
+    // Getters y setters para los atributos privados
+    public int getID() { return ID; }
+    public String getNombre() { return Nombre; }
+    public int getMonto() { return Monto; }
+    public int getMontoAhorros() { return montoAhorros; }
+    public void setMontoAhorros(int monto) { this.montoAhorros = monto; }
+    public void setSesionActiva(boolean activa) { this.sesionActiva = activa; }
 
     public void cambiarContraseña(String nuevaContraseña) {
         this.contraseña = nuevaContraseña;
@@ -67,7 +122,7 @@ public class Cliente {
     public boolean coincideConNombre(String nombre) {
         return this.Nombre.equalsIgnoreCase(nombre);
     }
-
+    
     public boolean isSesionActiva() {
         return sesionActiva;
     }
