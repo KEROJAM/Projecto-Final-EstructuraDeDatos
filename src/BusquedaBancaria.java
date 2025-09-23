@@ -95,10 +95,10 @@ public class BusquedaBancaria {
         }
 
         Cliente clienteMasCercano = clientesValidos[0];
-        int diferenciaMenor = Math.abs(clientesValidos[0].Monto - saldoObjetivo);
+        float diferenciaMenor = Math.abs(clientesValidos[0].Monto - saldoObjetivo);
 
         for (int i = 1; i < clientesValidos.length; i++) {
-            int diferencia = Math.abs(clientesValidos[i].Monto - saldoObjetivo);
+            float diferencia = Math.abs(clientesValidos[i].Monto - saldoObjetivo);
             if (diferencia < diferenciaMenor) {
                 diferenciaMenor = diferencia;
                 clienteMasCercano = clientesValidos[i];
@@ -220,8 +220,8 @@ public class BusquedaBancaria {
         // Encontrar rangos de ID y saldo
         int minID = clientesValidos[0].ID;
         int maxID = clientesValidos[0].ID;
-        int minSaldo = clientesValidos[0].Monto;
-        int maxSaldo = clientesValidos[0].Monto;
+        float minSaldo = clientesValidos[0].Monto;
+        float maxSaldo = clientesValidos[0].Monto;
 
         for (Cliente cliente : clientesValidos) {
             if (cliente.ID < minID) minID = cliente.ID;

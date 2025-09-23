@@ -232,7 +232,7 @@ public class BinaryTreeBancario<NodoBancario> {
     }
 
     // Buscar clientes por rango de saldo
-    public void buscarClientesPorRangoSaldo(int saldomin, int saldomax) {
+    public void buscarClientesPorRangoSaldo(float saldomin, float saldomax) {
         System.out.println("   ║ CLIENTES CON SALDO ENTRE $" + saldomin + " Y $" + saldomax);
         System.out.println("   ║ ═══════════════════════════════════════");
         int[] contador = {1};
@@ -242,7 +242,7 @@ public class BinaryTreeBancario<NodoBancario> {
         }
     }
 
-    private void buscarPorRangoRecursivo(NodoCliente nodo, int min, int max, int[] contador) {
+    private void buscarPorRangoRecursivo(NodoCliente nodo, float min, float max, int[] contador) {
         if (nodo == null) return;
 
         buscarPorRangoRecursivo(nodo.left, min, max, contador);
@@ -259,20 +259,20 @@ public class BinaryTreeBancario<NodoBancario> {
     // Clases auxiliares para cálculos
     private static class EstadisticaSucursal {
         int totalClientes = 0;
-        int saldoTotal = 0;
+        float saldoTotal = 0;
     }
 
     private static class ClienteMaximo {
         Cliente cliente = null;
-        int saldoMaximo = Integer.MIN_VALUE;
+        float saldoMaximo = Integer.MIN_VALUE;
     }
 
     // Nodo simple para el árbol de montos
     class NodoMonto {
-        int valor;
+        float valor;
         NodoMonto izquierda, derecha;
 
-        public NodoMonto(int valor) {
+        public NodoMonto(float valor) {
             this.valor = valor;
             izquierda = derecha = null;
         }
@@ -287,12 +287,12 @@ public class BinaryTreeBancario<NodoBancario> {
         }
 
         // Método público para insertar
-        public void insertar(int valor) {
+        public void insertar(float valor) {
             raiz = insertarRecursivo(raiz, valor);
         }
 
         // Lógica recursiva de inserción
-        private NodoMonto insertarRecursivo(NodoMonto actual, int valor) {
+        private NodoMonto insertarRecursivo(NodoMonto actual, float valor) {
             if (actual == null) {
                 return new NodoMonto(valor);
             }

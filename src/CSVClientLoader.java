@@ -67,7 +67,7 @@ public class CSVClientLoader {
             if (!existe || archivo.length() == 0) {
                 writer.println("ID,Nombre,Monto,NumeroTarjeta,Contraseña");
             }
-            writer.printf("%d,%s,%d,%s,%s\n",
+            writer.printf("%d,%s,%f,%s,%s\n",
                     cliente.ID,
                     cliente.Nombre,
                     cliente.Monto,

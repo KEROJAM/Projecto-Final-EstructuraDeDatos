@@ -14,7 +14,7 @@ public class OrdenamientoBancario {
     }
 
     private static int particionPorSaldo(Cliente[] clientes, int inicio, int fin) {
-        int pivote = clientes[fin].Monto; // Usar el último elemento como pivote
+        float pivote = clientes[fin].Monto; // Usar el último elemento como pivote
         int i = inicio - 1; // Índice del elemento más pequeño
 
         for (int j = inicio; j < fin; j++) {

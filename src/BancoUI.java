@@ -58,11 +58,11 @@ public class BancoUI extends JFrame {
      * comparación y la descripción completa de la transacción.
      */
     private static class TransactionNode {
-        int amount;
+        float amount;
         String description;
         TransactionNode left, right;
 
-        TransactionNode(int amount, String description) {
+        TransactionNode(float amount, String description) {
             this.amount = amount;
             this.description = description;
         }
@@ -76,11 +76,11 @@ public class BancoUI extends JFrame {
     private static class TransactionHistoryTree {
         private TransactionNode root;
 
-        public void insert(int amount, String description) {
+        public void insert(float amount, String description) {
             root = insertRec(root, amount, description);
         }
 
-        private TransactionNode insertRec(TransactionNode current, int amount, String description) {
+        private TransactionNode insertRec(TransactionNode current, float amount, String description) {
             if (current == null) {
                 return new TransactionNode(amount, description);
             }
@@ -483,9 +483,9 @@ public class BancoUI extends JFrame {
             // MODIFICADO: Usa el historial del cliente
             clienteSesion.Depositar(monto);
             // MODIFICADO: Añade registro con fecha y hora
-            clienteSesion.getPilaHistorial().push("Deposito: +$" + monto + " [" + getTimestamp() + "]");
+            clienteSesion.getPilaHistorial().push(String.format("Deposito: +%s [%s]", formatoMonto(monto), getTimestamp()));
             actualizarInfoCliente();
-            showMessage("Éxito", "Depósito de $" + monto + " realizado con éxito.");
+            showMessage("Éxito", "Depósito de " + formatoMonto(monto) + " realizado con éxito.");
         } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
     }
 
@@ -502,9 +502,9 @@ public class BancoUI extends JFrame {
             if (monto > clienteSesion.Monto) { showError("Fondos insuficientes."); return; }
             clienteSesion.Monto -= monto;
             // MODIFICADO: Añade registro con fecha y hora
-            clienteSesion.getPilaHistorial().push("Retiro: -$" + monto + " [" + getTimestamp() + "]");
+            clienteSesion.getPilaHistorial().push(String.format("Retiro: -%s [%s]", formatoMonto(monto), getTimestamp()));
             actualizarInfoCliente();
-            showMessage("Éxito", "Retiro de $" + monto + " realizado con éxito.");
+            showMessage("Éxito", "Retiro de " + formatoMonto(monto) + " realizado con éxito.");
         } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
     }
 
@@ -535,8 +535,8 @@ public class BancoUI extends JFrame {
 
                 // MODIFICADO: Añade registro con fecha y hora a ambos clientes
                 String timestamp = getTimestamp();
-                clienteSesion.getPilaHistorial().push("Transferencia a " + destinatario.Nombre + ": -$" + monto + " [" + timestamp + "]");
-                destinatario.getPilaHistorial().push("Transferencia de " + clienteSesion.Nombre + ": +$" + monto + " [" + timestamp + "]");
+                clienteSesion.getPilaHistorial().push(String.format("Transferencia a %s: -%s [%s]", destinatario.Nombre, formatoMonto(monto), timestamp));
+                destinatario.getPilaHistorial().push(String.format("Transferencia de %s: +%s [%s]", clienteSesion.Nombre, formatoMonto(monto), timestamp));
 
                 actualizarInfoCliente();
                 if (!esTransferenciaInusual) {
@@ -616,7 +616,7 @@ public class BancoUI extends JFrame {
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(10, 10));
         dialog.getContentPane().setBackground(COLOR_BACKGROUND);
-        JLabel ahorrosActualLabel = new JLabel(String.format("Saldo Ahorrado: $%,d", clienteSesion.montoAhorros), SwingConstants.CENTER);
+        JLabel ahorrosActualLabel = new JLabel(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros), SwingConstants.CENTER);
         ahorrosActualLabel.setFont(FONT_HEADER);
         ahorrosActualLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
         JPanel botonesPanel = new JPanel(new GridLayout(3, 1, 10, 10));
@@ -634,9 +634,9 @@ public class BancoUI extends JFrame {
                     clienteSesion.Monto -= monto;
                     clienteSesion.montoAhorros += monto;
                     // MODIFICADO: Añade registro con fecha y hora
-                    clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -$%d [%s]", monto, getTimestamp()));
+                    clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -%s [%s]", formatoMonto(monto), getTimestamp()));
                     actualizarInfoCliente();
-                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,d", clienteSesion.montoAhorros));
+                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
                     showMessage("Éxito", "Depósito a ahorros exitoso.", dialog);
                 }
             } catch (Exception ex) {
@@ -651,9 +651,9 @@ public class BancoUI extends JFrame {
                     clienteSesion.montoAhorros -= monto;
                     clienteSesion.Monto += monto;
                     // MODIFICADO: Añade registro con fecha y hora
-                    clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +$%d [%s]", monto, getTimestamp()));
+                    clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +%s [%s]", formatoMonto(monto), getTimestamp()));
                     actualizarInfoCliente();
-                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,d", clienteSesion.montoAhorros));
+                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
                     showMessage("Éxito", "Retiro de ahorros exitoso.", dialog);
                 } else {
                     showError("Monto no válido o fondos insuficientes.", dialog);
@@ -668,7 +668,7 @@ public class BancoUI extends JFrame {
                 double en1 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 1);
                 double en6 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 6);
                 double en12 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 12);
-                String proy = String.format("Proyección para $%,d (7%% Anual):\n\n- En 1 mes:   $%,d\n- En 6 meses: $%,d\n- En 1 año:   $%,d\n", clienteSesion.montoAhorros, (long) en1, (long) en6, (long) en12);
+                String proy = String.format("Proyección para $%,.2f (7%% Anual):\n\n- En 1 mes:   $%,.2f\n- En 6 meses: $%,.2f\n- En 1 año:   $%,.2f\n", clienteSesion.montoAhorros, en1, en6, en12);
                 showMessage("Proyección de Crecimiento", proy, dialog);
             } else {
                 showError("No hay fondos en ahorros para proyectar.", dialog);
@@ -693,8 +693,8 @@ public class BancoUI extends JFrame {
     private void actualizarInfoCliente() {
         if (clienteSesion != null) {
             clienteLabel.setText("Cliente: " + clienteSesion.Nombre);
-            saldoLabel.setText(String.format("Saldo Principal: $%,d", clienteSesion.Monto));
-            ahorrosLabel.setText(String.format("Saldo Ahorrado: $%,d", clienteSesion.montoAhorros));
+            saldoLabel.setText(String.format("Saldo Principal: $%,.2f", clienteSesion.Monto));
+            ahorrosLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
         }
     }
 
@@ -788,6 +788,10 @@ public class BancoUI extends JFrame {
             showMessage("Archivo Creado", "Archivo CSV de ejemplo creado en:\n" + new File(RUTA_CSV).getAbsolutePath());
             JOptionPane.showMessageDialog(this, "Por favor, reinicia la aplicación para cargar los clientes del nuevo archivo.", "Reinicio Necesario", JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    private String formatoMonto(double monto) {
+        return String.format("$%,.2f", monto);
     }
 
     public static void main(String[] args) {

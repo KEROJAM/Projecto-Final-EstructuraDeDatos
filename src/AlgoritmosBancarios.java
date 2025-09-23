@@ -14,7 +14,7 @@ public class AlgoritmosBancarios {
     }
 
     // Calcular suma total de saldos recursivamente
-    public static int sumarSaldosRecursivo(Cliente[] clientes, int indice) {
+    public static float sumarSaldosRecursivo(Cliente[] clientes, int indice) {
         // Caso base
         if (indice >= clientes.length || clientes[indice] == null) {
             return 0;
@@ -25,7 +25,7 @@ public class AlgoritmosBancarios {
     }
 
     // Contar clientes con saldo mayor a X recursivamente
-    public static int contarClientesSaldoMayor(Cliente[] clientes, int indice, int saldoMinimo) {
+    public static float contarClientesSaldoMayor(Cliente[] clientes, int indice, int saldoMinimo) {
         // Caso base
         if (indice >= clientes.length || clientes[indice] == null) {
             return 0;
@@ -107,7 +107,7 @@ public class AlgoritmosBancarios {
     }
 
     // Calcular suma de saldos usando divide y vencerás
-    public static int sumarSaldosDivideVenceras(Cliente[] clientes, int inicio, int fin) {
+    public static float sumarSaldosDivideVenceras(Cliente[] clientes, int inicio, int fin) {
         // Caso base: un solo cliente
         if (inicio == fin) {
             return clientes[inicio].Monto;
@@ -122,8 +122,8 @@ public class AlgoritmosBancarios {
         int medio = inicio + (fin - inicio) / 2;
 
         // Conquistar y combinar
-        int sumaIzquierda = sumarSaldosDivideVenceras(clientes, inicio, medio);
-        int sumaDerecha = sumarSaldosDivideVenceras(clientes, medio + 1, fin);
+        float sumaIzquierda = sumarSaldosDivideVenceras(clientes, inicio, medio);
+        float sumaDerecha = sumarSaldosDivideVenceras(clientes, medio + 1, fin);
 
         return sumaIzquierda + sumaDerecha;
     }
@@ -149,8 +149,8 @@ public class AlgoritmosBancarios {
         }
 
         // Usar recursividad para calcular estadísticas
-        int sumaTotal = sumarSaldosRecursivo(clientesValidos, 0);
-        int clientesRicos = contarClientesSaldoMayor(clientesValidos, 0, 10000);
+        float sumaTotal = sumarSaldosRecursivo(clientesValidos, 0);
+        float clientesRicos = contarClientesSaldoMayor(clientesValidos, 0, 10000);
         Cliente clienteMax = encontrarClienteMayorSaldo(clientesValidos, 0, clientesValidos.length - 1);
 
         System.out.println("   ║ Total de clientes: " + clientesValidos.length);

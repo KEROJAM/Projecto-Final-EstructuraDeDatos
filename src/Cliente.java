@@ -3,9 +3,9 @@ import java.util.Stack;
 public class Cliente {
     public int ID;
     public String Nombre;
-    public int Monto;
+    public float Monto;
     public String NumeroTarjeta;
-    public int montoAhorros;
+    public float montoAhorros;
     public boolean sesionActiva;
     public String contraseña;
     public Stack<String> pilaHistorial;
@@ -111,8 +111,8 @@ public class Cliente {
     // Getters y setters para los atributos privados
     public int getID() { return ID; }
     public String getNombre() { return Nombre; }
-    public int getMonto() { return Monto; }
-    public int getMontoAhorros() { return montoAhorros; }
+    public float getMonto() { return Monto; }
+    public float getMontoAhorros() { return montoAhorros; }
     public void setMontoAhorros(int monto) { this.montoAhorros = monto; }
     public void setSesionActiva(boolean activa) { this.sesionActiva = activa; }
 
