@@ -4,6 +4,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.Objects;
+import java.util.Stack;
 
 public class BancoUI extends JFrame {
 
@@ -217,21 +218,45 @@ public class BancoUI extends JFrame {
         }
 
         StringBuilder historialTexto = new StringBuilder("Últimos movimientos (Más recientes primero):\n---------------------------------------------\n");
-        Stack<String> tempStack = new Stack<>();
         try {
-            // MODIFICADO: Usa el historial del cliente con sesión activa
-            Node<String> actual = clienteSesion.getPilaHistorial().historial.firstNode;
-            while (actual != null) {
-                tempStack.push(actual.getData());
-                actual = actual.next;
+            // Obtener el historial del cliente
+            Stack<String> historial = clienteSesion.getPilaHistorial();
+            
+            // Crear una pila temporal para invertir el orden
+            Stack<String> tempStack = new Stack<>();
+            
+            // Copiar los elementos a la pila temporal
+            while (!historial.isEmpty()) {
+                try {
+                    String item = historial.peek();
+                    tempStack.push(item);
+                    historial.pop();
+                } catch (Exception e) {
+                    break; // Salir si hay algún error
+                }
             }
-
+            
+            // Mostrar los elementos en orden cronológico
+            int contador = 1;
             while (!tempStack.isEmpty()) {
-                historialTexto.append(tempStack.peek()).append("\n");
-                tempStack.pop();
+                try {
+                    String item = tempStack.peek();
+                    historialTexto.append(contador + ". ").append(item).append("\n");
+                    tempStack.pop();
+                    contador++;
+                    
+                    // Volver a agregar el ítem al historial original
+                    historial.push(item);
+                } catch (Exception e) {
+                    break; // Salir si hay algún error
+                }
+            }
+            
+            if (contador == 1) {
+                historialTexto.append("No hay historial de transacciones.");
             }
         } catch (Exception e) {
-            historialTexto.append("Error al leer el historial.");
+            historialTexto.append("Error al leer el historial: ").append(e.getMessage());
         }
 
         JTextArea textArea = new JTextArea(historialTexto.toString());
