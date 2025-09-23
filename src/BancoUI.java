@@ -28,11 +28,10 @@ public class BancoUI extends JFrame {
     private static final Color COLOR_ACCENT = new Color(0, 123, 255);
     private static final Color COLOR_LOGOUT = new Color(220, 53, 69);
 
-    private static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 32);
-    private static final Font FONT_HEADER = new Font("Segoe UI", Font.BOLD, 18);
-    private static final Font FONT_BODY = new Font("Segoe UI", Font.PLAIN, 14);
-    private static final Font FONT_BUTTON = new Font("Segoe UI", Font.BOLD, 14);
-    public boolean inusual;
+    private static final Font FONT_TITLE = new Font("Noto Sans", Font.BOLD, 32);
+    private static final Font FONT_HEADER = new Font("Noto Sans", Font.BOLD, 18);
+    private static final Font FONT_BODY = new Font("Noto Sans", Font.PLAIN, 14);
+    private static final Font FONT_BUTTON = new Font("Noto Sans", Font.BOLD, 14);
     // =========================================================================
     // COMPONENTES DE LA INTERFAZ (FRONTEND)
     // =========================================================================
@@ -563,7 +562,7 @@ public class BancoUI extends JFrame {
         messagePanel.setBorder(new EmptyBorder(20, 20, 10, 20));
 
         JLabel titleLabel = new JLabel("Transferencia Sospechosa");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setFont(new Font("Noto Sans", Font.BOLD, 16));
         titleLabel.setForeground(new Color(200, 0, 0));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -740,9 +739,9 @@ public class BancoUI extends JFrame {
         // Panel para el mensaje
         JPanel messagePanel = new JPanel(new BorderLayout(5, 5));
         JLabel titleLabel = new JLabel(titulo);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setFont(new Font("Noto Sans", Font.BOLD, 16));
         titleLabel.setForeground(new Color(200, 0, 0)); // Rojo oscuro
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setFont(new Font("Noto Sans", Font.BOLD, 16));
         titleLabel.setForeground(new Color(200, 0, 0));
         JTextArea messageArea = new JTextArea(mensaje);
         messageArea.setEditable(false);
