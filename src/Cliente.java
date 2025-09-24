@@ -12,7 +12,7 @@ public class Cliente {
     private static GrafoTransacciones grafoTransacciones = new GrafoTransacciones();
     private boolean posibleFraude; // Bandera para indicar posible actividad fraudulenta
     public transient BancoUI ui; // Referencia a la interfaz de usuario (transient para evitar problemas de serialización)
-    private boolean tarjetaBloqueada; // Bandera para indicar si la tarjeta está bloqueada
+    public boolean tarjetaBloqueada; // Bandera para indicar si la tarjeta está bloqueada
 
     public Cliente() {
         this.ID = 0;

@@ -65,14 +65,15 @@ public class CSVClientLoader {
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo, true))) {
             if (!existe || archivo.length() == 0) {
-                writer.println("ID,Nombre,Monto,NumeroTarjeta,Contraseña");
+                writer.println("ID,Nombre,Monto,NumeroTarjeta,password,TarjetaBloqueada");
             }
             writer.printf("%d,%s,%f,%s,%s\n",
                     cliente.ID,
                     cliente.Nombre,
                     cliente.Monto,
                     cliente.NumeroTarjeta,
-                    cliente.getContraseña());
+                    cliente.getContraseña(),
+                    cliente.tarjetaBloqueada);
         } catch (IOException e) {
             System.err.println("Error al guardar el cliente en el archivo CSV: " + e.getMessage());
         }
