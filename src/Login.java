@@ -25,7 +25,7 @@ public class Login {
         String[] contraseñas = {"juan123", "maria456", "carlos789", "ana012", "pedro345"};
 
         for (int i = 0; i < 5; i++) {
-            Cliente cliente = new Cliente(i + 1, nombres[i], saldos[i], tarjetas[i], contraseñas[i]);
+            Cliente cliente = new Cliente(i + 1, nombres[i], saldos[i], tarjetas[i], contraseñas[i], false);
             clientesTable.put(tarjetas[i], cliente);
             addClienteToList(cliente);
         }
@@ -232,7 +232,7 @@ public class Login {
 
             // Crear nuevo cliente con saldo inicial de 1000
             int nuevoID = getTotalClientes() + 1;
-            Cliente nuevoCliente = new Cliente(nuevoID, nombreCompleto, 1000, tarjetaUsuario, contraseña);
+            Cliente nuevoCliente = new Cliente(nuevoID, nombreCompleto, 1000, tarjetaUsuario, contraseña,false);
 
             // Agregar a la tabla hash y a la lista
             clientesTable.put(tarjetaUsuario, nuevoCliente);

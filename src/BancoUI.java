@@ -150,12 +150,12 @@ public class BancoUI extends JFrame {
                             "Puede crear un archivo de ejemplo usando 'Opciones Avanzadas'.",
                     "Archivo no encontrado",
                     JOptionPane.WARNING_MESSAGE);
-            agregarCliente(1, "Usuario Ejemplo", 1000, "1111222233334444", "pass123", false);
+            agregarCliente(1, "Usuario Ejemplo", 1000, "1111222233334444", "pass123", false, false);
         }
     }
 
-    private void agregarCliente(int id, String nombre, int monto, String numeroTarjeta, String contrasena, boolean guardarEnCSV) {
-        Cliente cliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena);
+    private void agregarCliente(int id, String nombre, int monto, String numeroTarjeta, String contrasena,boolean tarjetaBloqueada ,boolean guardarEnCSV) {
+        Cliente cliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena, false);
         clientesTable.put(numeroTarjeta, cliente);
         if (guardarEnCSV) {
             CSVClientLoader.guardarCliente(cliente, RUTA_CSV);
@@ -467,7 +467,7 @@ public class BancoUI extends JFrame {
             } else if (ValidadorTarjeta.validarTarjeta(tarjeta)) {
                 String nombreCompleto = nombre + " " + apellido;
                 int nuevoID = clientesTable.size() + 1;
-                agregarCliente(nuevoID, nombreCompleto, 0, tarjeta, password, true);
+                agregarCliente(nuevoID, nombreCompleto, 0, tarjeta, password, false,true);
                 showMessage("Registro Exitoso", "Cliente '" + nombreCompleto + "' registrado con éxito.");
             } else {
                 showError("Número de tarjeta no válido.");

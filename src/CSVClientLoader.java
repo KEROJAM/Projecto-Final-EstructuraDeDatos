@@ -30,16 +30,17 @@ public class CSVClientLoader {
             while ((linea = br.readLine()) != null) {
                 if (linea.trim().isEmpty()) continue;
                 String[] datos = linea.split(",");
-                if (datos.length == 5) {
+                if (datos.length == 6) {
                     try {
                         int id = Integer.parseInt(datos[0].trim());
                         String nombre = datos[1].trim();
                         int monto = Integer.parseInt(datos[2].trim());
                         String numeroTarjeta = datos[3].trim();
                         String contrasena = datos[4].trim();
+                        Boolean tarjetaBloqueada = Boolean.parseBoolean(datos[5].trim());
 
                         if (!clientesTable.contains(numeroTarjeta)) {
-                            Cliente nuevoCliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena);
+                            Cliente nuevoCliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena, tarjetaBloqueada);
                             clientesTable.put(numeroTarjeta, nuevoCliente);
                             clientesCargados++;
                         }
@@ -67,7 +68,7 @@ public class CSVClientLoader {
             if (!existe || archivo.length() == 0) {
                 writer.println("ID,Nombre,Monto,NumeroTarjeta,password,TarjetaBloqueada");
             }
-            writer.printf("%d,%s,%f,%s,%s\n",
+            writer.printf("%d,%s,%f,%s,%s,%b\n",
                     cliente.ID,
                     cliente.Nombre,
                     cliente.Monto,

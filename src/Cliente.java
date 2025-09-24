@@ -25,7 +25,7 @@ public class Cliente {
         this.tarjetaBloqueada = false;
     }
 
-    public Cliente(int ID, String Nombre, int Monto, String NumeroTarjeta, String contraseña) {
+    public Cliente(int ID, String Nombre, int Monto, String NumeroTarjeta, String contraseña, boolean TarjetaBloqueada) {
         this.ID = ID;
         this.Nombre = Nombre;
         this.Monto = Monto;
@@ -33,7 +33,7 @@ public class Cliente {
         this.sesionActiva = false;
         this.contraseña = contraseña;
         this.pilaHistorial = new Stack<>(); // AÑADIDO: Se inicializa el historial
-        this.tarjetaBloqueada = false;
+        this.tarjetaBloqueada = TarjetaBloqueada;
     }
 
     public Cliente(int monto, String transaccion, int i, String s) {
