@@ -3,6 +3,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDateTime;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.Stack;
@@ -14,8 +16,11 @@ public class BancoUI extends JFrame {
     // --- SECCIÓN 1: LÓGICA DEL SISTEMA (BACKEND) ---
     private HashTable clientesTable;
     private Cliente clienteSesion;
+    private Empleado empleadoSesion;
     private Queue<String> colaTransferencias;
     private static final String RUTA_CSV = "src/clientes.csv";
+    private static final String USUARIO_ADMIN = "admin";
+    private static final String CONTRASENA_ADMIN = "admin123";
 
 
     // =========================================================================
@@ -777,17 +782,118 @@ public class BancoUI extends JFrame {
     }
 
     private void gestionarCSV() {
-        int userSelection = JOptionPane.showConfirmDialog(this,
-                "¿Deseas crear un archivo 'clientes.csv' de ejemplo en la carpeta 'src'?",
-                "Crear Archivo de Ejemplo",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
+        // Mostrar diálogo de autenticación de empleado
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        if (userSelection == JOptionPane.YES_OPTION) {
-            CSVClientLoader.crearEjemplo(RUTA_CSV);
-            showMessage("Archivo Creado", "Archivo CSV de ejemplo creado en:\n" + new File(RUTA_CSV).getAbsolutePath());
-            JOptionPane.showMessageDialog(this, "Por favor, reinicia la aplicación para cargar los clientes del nuevo archivo.", "Reinicio Necesario", JOptionPane.INFORMATION_MESSAGE);
+        JLabel userLabel = new JLabel("Usuario:");
+        JTextField userField = createStyledTextField();
+        JLabel passLabel = new JLabel("Contraseña:");
+        JPasswordField passField = createStyledPasswordField();
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(userLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 0;
+        panel.add(userField, gbc);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(passLabel, gbc);
+        gbc.gridx = 1; gbc.gridy = 1;
+        panel.add(passField, gbc);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, 
+                "Inicio de Sesión de Empleado",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String usuario = userField.getText();
+            String contrasena = new String(passField.getPassword());
+            
+            // Validar credenciales del empleado
+            if (validarCredencialesEmpleado(usuario, contrasena)) {
+                mostrarMenuEmpleado();
+            } else {
+                showError("Credenciales inválidas. Acceso denegado.");
+            }
         }
+    }
+    
+    private boolean validarCredencialesEmpleado(String usuario, String contrasena) {
+        // Aquí podrías tener una lista de empleados, por ahora solo validamos el admin
+        if (USUARIO_ADMIN.equals(usuario) && CONTRASENA_ADMIN.equals(contrasena)) {
+            empleadoSesion = new Empleado(usuario, contrasena, true);
+            return true;
+        }
+        return false;
+    }
+    
+    private void mostrarMenuEmpleado() {
+        JDialog dialog = new JDialog(this, "Menú de Empleado", true);
+        dialog.setSize(400, 250);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.getContentPane().setBackground(COLOR_BACKGROUND);
+        
+        JLabel tituloLabel = new JLabel("Bienvenido, " + empleadoSesion.getUsuario(), SwingConstants.CENTER);
+        tituloLabel.setFont(FONT_HEADER);
+        tituloLabel.setBorder(new EmptyBorder(10, 10, 20, 10));
+        
+        JPanel botonesPanel = new JPanel(new GridLayout(2, 1, 10, 10));
+        botonesPanel.setBackground(COLOR_BACKGROUND);
+        botonesPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
+        
+        // Botón para desbloquear tarjeta
+        JButton desbloquearButton = createStyledButton("Desbloquear Tarjeta", COLOR_ACCENT, COLOR_TEXT_LIGHT);
+        desbloquearButton.addActionListener(e -> {
+            String numeroTarjeta = JOptionPane.showInputDialog(dialog, 
+                    "Ingrese el número de tarjeta a desbloquear:", 
+                    "Desbloquear Tarjeta", 
+                    JOptionPane.PLAIN_MESSAGE);
+                    
+            if (numeroTarjeta != null && !numeroTarjeta.trim().isEmpty()) {
+                // Aquí iría la lógica para desbloquear la tarjeta
+                // Por ahora solo mostramos un mensaje de confirmación
+                showMessage("Operación Exitosa", 
+                        "La tarjeta " + numeroTarjeta + " ha sido desbloqueada exitosamente.",
+                        dialog);
+            }
+        });
+        
+        // Botón para crear archivo CSV de ejemplo
+        JButton crearCSVButton = createStyledButton("Crear CSV de Ejemplo", COLOR_ACCENT, COLOR_TEXT_LIGHT);
+        crearCSVButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(dialog,
+                    "¿Deseas crear un archivo 'clientes.csv' de ejemplo en la carpeta 'src'?",
+                    "Crear Archivo de Ejemplo",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                CSVClientLoader.crearEjemplo(RUTA_CSV);
+                showMessage("Archivo Creado", 
+                        "Archivo CSV de ejemplo creado en:\n" + 
+                        new File(RUTA_CSV).getAbsolutePath() +
+                        "\n\nPor favor, reinicia la aplicación para cargar los clientes del nuevo archivo.",
+                        dialog);
+            }
+        });
+        
+        botonesPanel.add(desbloquearButton);
+        botonesPanel.add(crearCSVButton);
+        
+        JButton cerrarButton = createStyledButton("Cerrar Sesión", COLOR_LOGOUT, COLOR_TEXT_LIGHT);
+        cerrarButton.addActionListener(e -> {
+            empleadoSesion = null;
+            dialog.dispose();
+        });
+        
+        dialog.add(tituloLabel, BorderLayout.NORTH);
+        dialog.add(botonesPanel, BorderLayout.CENTER);
+        dialog.add(cerrarButton, BorderLayout.SOUTH);
+        
+        dialog.setVisible(true);
     }
 
     private String formatoMonto(double monto) {
