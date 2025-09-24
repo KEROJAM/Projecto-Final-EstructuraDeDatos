@@ -855,9 +855,15 @@ public class BancoUI extends JFrame {
             if (numeroTarjeta != null && !numeroTarjeta.trim().isEmpty()) {
                 // Aquí iría la lógica para desbloquear la tarjeta
                 // Por ahora solo mostramos un mensaje de confirmación
-                showMessage("Operación Exitosa", 
-                        "La tarjeta " + numeroTarjeta + " ha sido desbloqueada exitosamente.",
-                        dialog);
+                for (int i = 0; i < clientesTable.size(); i++) {
+                    if (clientesTable.get(numeroTarjeta) != null) {
+                        clientesTable.get(numeroTarjeta).desbloquearTarjeta();
+                        showMessage("Operación Exitosa",
+                                "La tarjeta " + numeroTarjeta + " ha sido desbloqueada exitosamente.",
+                                dialog);
+                        return;
+                    }
+                }
             }
         });
         
