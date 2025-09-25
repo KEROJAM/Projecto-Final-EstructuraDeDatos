@@ -32,7 +32,7 @@ public class Queue<E> {
      * y se almacena como String dentro de un {@link Node}.
      * @throws IOException si ocurre un error al leer desde la entrada
      */
-    public void enqueue(int Monto) throws IOException {
+    public void enqueue(float Monto) throws IOException {
         Node newNode = new Node(Monto);
 
         if (this.transferencias.firstNode == null) {

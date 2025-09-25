@@ -3,11 +3,11 @@ import java.time.LocalDateTime;
 public class Transaccion {
     private String idTransaccion;
     private String numeroTarjeta;
-    private double monto;
+    private float monto;
     private LocalDateTime fechaHora;
     private String tipo; // "DEPOSITO", "RETIRO", "TRANSFERENCIA"
     
-    public Transaccion(String idTransaccion, String numeroTarjeta, double monto, String tipo) {
+    public Transaccion(String idTransaccion, String numeroTarjeta, float monto, String tipo) {
         this.idTransaccion = idTransaccion;
         this.numeroTarjeta = numeroTarjeta;
         this.monto = monto;

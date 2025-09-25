@@ -16,8 +16,8 @@ public class PriorityQueueBancaria {
     }
 
     // Agregar transacción bancaria con prioridad
-    public void agregarTransaccion(String tipo, int monto, String cliente, int prioridad) {
-        String transaccion = String.format("ID:%d %s: $%d - Cliente: %s",
+    public void agregarTransaccion(String tipo, float monto, String cliente, int prioridad) {
+        String transaccion = String.format("ID:%d %s: $%f - Cliente: %s",
                 transaccionCounter++, tipo, monto, cliente);
         push(prioridad, transaccion);
     }

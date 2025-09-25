@@ -521,7 +521,7 @@ public class BancoUI extends JFrame {
         
         String montoStr = JOptionPane.showInputDialog(this, "Ingrese el monto a depositar:", "Depósito", JOptionPane.PLAIN_MESSAGE);
         try {
-            int monto = Integer.parseInt(montoStr);
+            float monto = Float.parseFloat(montoStr);
             if (monto <= 0) { showError("El monto debe ser positivo."); return; }
             // MODIFICADO: Usa el historial del cliente
             clienteSesion.Depositar(monto);
@@ -540,7 +540,7 @@ public class BancoUI extends JFrame {
         
         String montoStr = JOptionPane.showInputDialog(this, "Ingrese el monto a retirar:", "Retiro", JOptionPane.PLAIN_MESSAGE);
         try {
-            int monto = Integer.parseInt(montoStr);
+            float monto = Float.parseFloat(montoStr);
             if (monto <= 0) { showError("El monto debe ser positivo."); return; }
             if (monto > clienteSesion.Monto) { showError("Fondos insuficientes."); return; }
             clienteSesion.Monto -= monto;
@@ -565,7 +565,7 @@ public class BancoUI extends JFrame {
         int result = JOptionPane.showConfirmDialog(this, panel, "Realizar Transferencia", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
-                String tarjetaDest = tarjetaField.getText(); String NameDest = NameField.getText(); int monto = Integer.parseInt(montoField.getText());
+                String tarjetaDest = tarjetaField.getText(); String NameDest = NameField.getText(); float monto = Float.parseFloat(montoField.getText());
                 Cliente destinatario = clientesTable.get(tarjetaDest);
                 if (destinatario == null) { showError("Nº de Tarjeta no encontrado."); return; }
                 if (!Objects.equals(destinatario.Nombre, NameDest)) { showError("El Nombre no corresponde al titular de la tarjeta."); return; }

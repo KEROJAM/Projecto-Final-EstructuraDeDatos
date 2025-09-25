@@ -47,7 +47,7 @@ public class Cliente {
         return this.pilaHistorial;
     }
 
-    public boolean Depositar(int monto) {
+    public boolean Depositar(float monto) {
         if (this.tarjetaBloqueada) {
             System.out.println("La tarjeta está bloqueada");
             return false;
@@ -70,7 +70,7 @@ public class Cliente {
         return this.posibleFraude;
     }
 
-    public boolean Transferir(int monto) {
+    public boolean Transferir(float monto) {
         if (this.tarjetaBloqueada) {
             System.out.println("La tarjeta está bloqueada");
             return false;
