@@ -135,7 +135,7 @@ public class BancoUI extends JFrame {
         add(mainPanel);
         cardLayout.show(mainPanel, "Initial");
     }
-
+    // ACTUALIZAR el método inicializarSistemaBancario para manejar mejor la carga
     private void inicializarSistemaBancario() {
         clientesTable = new HashTable(100);
         colaTransferencias = new Queue<>();
@@ -144,19 +144,36 @@ public class BancoUI extends JFrame {
         if (csvFile.exists()) {
             int loaded = CSVClientLoader.cargarClientes(RUTA_CSV, clientesTable);
             System.out.println("Cargados " + loaded + " clientes desde " + RUTA_CSV);
+
+            // Verificar que los clientes se cargaron correctamente
+            if (loaded == 0) {
+                JOptionPane.showMessageDialog(null,
+                        "El archivo CSV existe pero no se pudieron cargar clientes.\n" +
+                                "Puede que el formato no sea correcto.",
+                        "Error de carga",
+                        JOptionPane.WARNING_MESSAGE);
+                // Crear un cliente de ejemplo
+                agregarCliente(1, "Usuario Ejemplo", 1000, 500, "1111222233334444", "pass123", false, false);
+            }
         } else {
             JOptionPane.showMessageDialog(null,
                     "No se encontró el archivo 'clientes.csv' en la carpeta 'src'.\n" +
                             "Puede crear un archivo de ejemplo usando 'Opciones Avanzadas'.",
                     "Archivo no encontrado",
                     JOptionPane.WARNING_MESSAGE);
-            agregarCliente(1, "Usuario Ejemplo", 1000, "1111222233334444", "pass123", false, false);
+            // Crear un cliente de ejemplo
+            agregarCliente(1, "Usuario Ejemplo", 1000, 500, "1111222233334444", "pass123", false, false);
         }
     }
 
-    private void agregarCliente(int id, String nombre, int monto, String numeroTarjeta, String contrasena,boolean tarjetaBloqueada ,boolean guardarEnCSV) {
-        Cliente cliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena, false);
+
+    // EN TU CLASE BancoUI.java
+
+    private void agregarCliente(int id, String nombre, int monto, int montoAhorros, String numeroTarjeta, String contrasena, boolean tarjetaBloqueada, boolean guardarEnCSV) {
+        // CORRECCIÓN: Usar el constructor correcto con 7 parámetros
+        Cliente cliente = new Cliente(id, nombre, monto, montoAhorros, numeroTarjeta, contrasena, tarjetaBloqueada);
         clientesTable.put(numeroTarjeta, cliente);
+
         if (guardarEnCSV) {
             CSVClientLoader.guardarCliente(cliente, RUTA_CSV);
         }
@@ -402,22 +419,41 @@ public class BancoUI extends JFrame {
     }
 
     private void intentarLogin() {
-        String tarjeta = loginTarjetaField.getText();
+        String tarjeta = loginTarjetaField.getText().trim();
         String password = new String(loginPasswordField.getPassword());
 
         if (tarjeta.isEmpty() || password.isEmpty()) {
             showError("El número de tarjeta y la contraseña son obligatorios.");
             return;
         }
+
+        // Validar formato de tarjeta
         if (!ValidadorTarjeta.validarTarjeta(tarjeta)) {
             showError("Formato de tarjeta no válido.");
             return;
         }
+
+        // Buscar cliente en la tabla hash
         Cliente clienteEncontrado = clientesTable.get(tarjeta);
-        if (clienteEncontrado == null || !clienteEncontrado.validarContraseña(password)) {
-            showError("Credenciales incorrectas.");
+
+        if (clienteEncontrado == null) {
+            showError("Tarjeta no registrada.");
             return;
         }
+
+        // Verificar contraseña
+        if (!clienteEncontrado.validarContraseña(password)) {
+            showError("Contraseña incorrecta.");
+            return;
+        }
+
+        // Verificar si la tarjeta está bloqueada
+        if (clienteEncontrado.isTarjetaBloqueada()) {
+            showError("Tarjeta bloqueada. Contacte al banco para desbloquearla.");
+            return;
+        }
+
+        // Login exitoso
         clienteSesion = clienteEncontrado;
         clienteSesion.setUI(this);
         actualizarInfoCliente();
@@ -445,7 +481,8 @@ public class BancoUI extends JFrame {
         panel.add(new JLabel("Confirmar Contraseña:"));
         panel.add(confirmPasswordField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Registro de Nuevo Cliente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Registro de Nuevo Cliente",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
             String nombre = nombreField.getText();
@@ -467,7 +504,8 @@ public class BancoUI extends JFrame {
             } else if (ValidadorTarjeta.validarTarjeta(tarjeta)) {
                 String nombreCompleto = nombre + " " + apellido;
                 int nuevoID = clientesTable.size() + 1;
-                agregarCliente(nuevoID, nombreCompleto, 0, tarjeta, password, false,true);
+                // CORRECCIÓN: Incluir montoAhorros (0 por defecto para nuevo cliente)
+                agregarCliente(nuevoID, nombreCompleto, 0, 0, tarjeta, password, false, true);
                 showMessage("Registro Exitoso", "Cliente '" + nombreCompleto + "' registrado con éxito.");
             } else {
                 showError("Número de tarjeta no válido.");
@@ -614,19 +652,22 @@ public class BancoUI extends JFrame {
 
         dialog.setVisible(true);
     }
-
     private void mostrarDialogoCajaAhorros() {
         JDialog dialog = new JDialog(this, "Caja de Inversión / Ahorros", true);
-        dialog.setSize(450, 350);
+        dialog.setSize(450, 400); // Aumenté el tamaño para el nuevo botón
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(10, 10));
         dialog.getContentPane().setBackground(COLOR_BACKGROUND);
+
         JLabel ahorrosActualLabel = new JLabel(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros), SwingConstants.CENTER);
         ahorrosActualLabel.setFont(FONT_HEADER);
         ahorrosActualLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        JPanel botonesPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+
+        JPanel botonesPanel = new JPanel(new GridLayout(4, 1, 10, 10)); // Cambié a 4 filas
         botonesPanel.setBackground(COLOR_BACKGROUND);
         botonesPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
+
+        // Botones existentes...
         botonesPanel.add(createStyledButton("Depositar en Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {
             String montoStr = JOptionPane.showInputDialog(dialog, "Monto a depositar (mín. $100):", "Depositar", JOptionPane.PLAIN_MESSAGE);
             try {
@@ -638,7 +679,6 @@ public class BancoUI extends JFrame {
                 } else {
                     clienteSesion.Monto -= monto;
                     clienteSesion.montoAhorros += monto;
-                    // MODIFICADO: Añade registro con fecha y hora
                     clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -%s [%s]", formatoMonto(monto), getTimestamp()));
                     actualizarInfoCliente();
                     ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
@@ -648,14 +688,14 @@ public class BancoUI extends JFrame {
                 showError("Monto inválido.", dialog);
             }
         }));
-        botonesPanel.add(createStyledButton("Retirar de Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {
+
+        botonesPanel.add(createStyledButton("Retirar de Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {            // Código existente para retirar...
             String montoStr = JOptionPane.showInputDialog(dialog, "Monto a retirar de ahorros:", "Retirar", JOptionPane.PLAIN_MESSAGE);
             try {
                 int monto = Integer.parseInt(montoStr);
                 if (monto > 0 && monto <= clienteSesion.montoAhorros) {
                     clienteSesion.montoAhorros -= monto;
                     clienteSesion.Monto += monto;
-                    // MODIFICADO: Añade registro con fecha y hora
                     clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +%s [%s]", formatoMonto(monto), getTimestamp()));
                     actualizarInfoCliente();
                     ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
@@ -667,18 +707,72 @@ public class BancoUI extends JFrame {
                 showError("Monto inválido.", dialog);
             }
         }));
+
+        // MODIFICA el botón "Ver Proyección de Crecimiento" en mostrarDialogoCajaAhorros:
+
         botonesPanel.add(createStyledButton("Ver Proyección de Crecimiento", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {
             if (clienteSesion.montoAhorros > 0) {
                 final double TASA_ANUAL = 0.07, TASA_MENSUAL = TASA_ANUAL / 12.0;
                 double en1 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 1);
                 double en6 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 6);
                 double en12 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 12);
-                String proy = String.format("Proyección para $%,.2f (7%% Anual):\n\n- En 1 mes:   $%,.2f\n- En 6 meses: $%,.2f\n- En 1 año:   $%,.2f\n", clienteSesion.montoAhorros, en1, en6, en12);
-                showMessage("Proyección de Crecimiento", proy, dialog);
+                String proy = String.format("Proyección para $%,.2f (7%% Anual):\n\n- En 1 mes:   $%,.2f\n- En 6 meses: $%,.2f\n- En 1 año:   $%,.2f\n",
+                        clienteSesion.montoAhorros, en1, en6, en12);
+
+                // Crear un panel personalizado con las opciones de gráfica
+                JPanel panelProyeccion = new JPanel(new BorderLayout(10, 10));
+                panelProyeccion.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+                // Área de texto con la proyección
+                JTextArea textoProyeccion = new JTextArea(proy);
+                textoProyeccion.setEditable(false);
+                textoProyeccion.setFont(new Font("Monospaced", Font.PLAIN, 12));
+                textoProyeccion.setBackground(COLOR_BACKGROUND);
+
+                // Panel de botones para gráficas
+                JPanel panelBotonesGraficas = new JPanel(new GridLayout(2, 1, 5, 5));
+                panelBotonesGraficas.setBorder(new EmptyBorder(10, 0, 0, 0));
+
+                JButton btnGraficaBarras = createStyledButton("Ver Gráfica de Barras (3 puntos)", new Color(0, 150, 0), COLOR_TEXT_LIGHT);
+                JButton btnGraficaLineal = createStyledButton("Ver Gráfica Lineal (12 meses)", new Color(0, 100, 200), COLOR_TEXT_LIGHT);
+
+                btnGraficaBarras.addActionListener(ev -> {
+                    Window parentWindow = SwingUtilities.getWindowAncestor(btnGraficaBarras);
+                    if (parentWindow != null) {
+                        parentWindow.dispose();
+                    }
+                    mostrarGraficaBarras3Meses(clienteSesion.montoAhorros);
+                });
+
+                btnGraficaLineal.addActionListener(ev -> {
+                    Window parentWindow = SwingUtilities.getWindowAncestor(btnGraficaLineal);
+                    if (parentWindow != null) {
+                        parentWindow.dispose();
+                    }
+                    mostrarGraficaLineal12Meses(clienteSesion.montoAhorros);
+                });
+
+                panelBotonesGraficas.add(btnGraficaBarras);
+                panelBotonesGraficas.add(btnGraficaLineal);
+
+                panelProyeccion.add(new JScrollPane(textoProyeccion), BorderLayout.CENTER);
+                panelProyeccion.add(panelBotonesGraficas, BorderLayout.SOUTH);
+
+                // Mostrar el diálogo con OK para cerrar
+                Object[] opciones = {"OK"};
+                JOptionPane.showOptionDialog(dialog, panelProyeccion, "Proyección de Crecimiento",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                        null, opciones, opciones[0]);
+
             } else {
                 showError("No hay fondos en ahorros para proyectar.", dialog);
             }
         }));
+
+
+
+        // NUEVO BOTÓN PARA LA GRÁFICA (reemplaza el anterior)
+
         dialog.add(ahorrosActualLabel, BorderLayout.NORTH);
         dialog.add(botonesPanel, BorderLayout.CENTER);
         dialog.setVisible(true);
@@ -686,6 +780,278 @@ public class BancoUI extends JFrame {
 
     private static double calcularCrecimientoAhorros(double capital, double tasaMensual, int meses) {
         if (meses == 0) return capital; return calcularCrecimientoAhorros(capital * (1 + tasaMensual), tasaMensual, meses - 1);
+    }
+
+// ══════════════════════════════════════════════════════════════════════════
+// MÉTODOS DE GRÁFICA (COMIENZO)
+// ══════════════════════════════════════════════════════════════════════════
+
+    private void mostrarGraficaBarras3Meses(double capitalInicial) {
+        JDialog dialog = new JDialog(this, "Gráfica de Barras - Proyección 7% Anual", true);
+        dialog.setSize(600, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        final double TASA_ANUAL = 0.07;
+        final double TASA_MENSUAL = TASA_ANUAL / 12.0;
+
+        // Calcular valores para los 3 puntos clave
+        double mes1 = calcularCrecimientoAhorros(capitalInicial, TASA_MENSUAL, 1);
+        double mes6 = calcularCrecimientoAhorros(capitalInicial, TASA_MENSUAL, 6);
+        double mes12 = calcularCrecimientoAhorros(capitalInicial, TASA_MENSUAL, 12);
+
+        JPanel panelGrafica = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int width = getWidth();
+                int height = getHeight();
+                int padding = 80;
+                int graphWidth = width - 2 * padding;
+                int graphHeight = height - 2 * padding;
+
+                // Dibujar ejes
+                g2d.setColor(Color.BLACK);
+                g2d.drawLine(padding, height - padding, width - padding, height - padding); // Eje X
+                g2d.drawLine(padding, height - padding, padding, padding); // Eje Y
+
+                // Configurar barras
+                int barWidth = 80;
+                int espacio = 40;
+                double maxValor = Math.max(mes12, capitalInicial * 1.1);
+
+                // Dibujar barras
+                String[] meses = {"Mes 1", "Mes 6", "Mes 12"};
+                double[] valores = {mes1, mes6, mes12};
+                Color[] colores = {new Color(70, 130, 180), new Color(60, 179, 113), new Color(218, 165, 32)};
+
+                for (int i = 0; i < 3; i++) {
+                    int x = padding + espacio + i * (barWidth + espacio);
+                    int barHeight = (int)((valores[i] - capitalInicial) * graphHeight / (maxValor - capitalInicial));
+                    int y = height - padding - barHeight;
+
+                    // Dibujar barra
+                    g2d.setColor(colores[i]);
+                    g2d.fillRect(x, y, barWidth, barHeight);
+
+                    // Borde de la barra
+                    g2d.setColor(Color.BLACK);
+                    g2d.drawRect(x, y, barWidth, barHeight);
+
+                    // Etiqueta del valor
+                    g2d.setColor(Color.BLACK);
+                    g2d.drawString(String.format("$%,.0f", valores[i]), x, y - 5);
+
+                    // Etiqueta del mes
+                    g2d.drawString(meses[i], x + barWidth/2 - 20, height - padding + 20);
+
+                    // Línea de capital inicial
+                    g2d.setColor(Color.RED);
+                    int yInicial = height - padding;
+                    g2d.drawLine(padding, yInicial, width - padding, yInicial);
+                    g2d.drawString("Capital Inicial", padding, yInicial - 5);
+                }
+
+                // Títulos
+                g2d.setColor(Color.BLACK);
+                g2d.setFont(new Font("Arial", Font.BOLD, 16));
+                g2d.drawString("Proyección de Inversión - 7% Anual", width / 2 - 150, 30);
+                g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                g2d.drawString("Capital Inicial: $" + String.format("%,.2f", capitalInicial), width / 2 - 80, 50);
+            }
+        };
+
+        panelGrafica.setBackground(Color.WHITE);
+
+        // Panel de información detallada
+        JPanel infoPanel = new JPanel(new GridLayout(4, 2, 10, 5));
+        infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        infoPanel.add(new JLabel("Capital Inicial:"));
+        infoPanel.add(new JLabel(String.format("$%,.2f", capitalInicial)));
+        infoPanel.add(new JLabel("Mes 1:"));
+        infoPanel.add(new JLabel(String.format("$%,.2f (+$%,.2f)", mes1, mes1 - capitalInicial)));
+        infoPanel.add(new JLabel("Mes 6:"));
+        infoPanel.add(new JLabel(String.format("$%,.2f (+$%,.2f)", mes6, mes6 - capitalInicial)));
+        infoPanel.add(new JLabel("Mes 12:"));
+        infoPanel.add(new JLabel(String.format("$%,.2f (+$%,.2f)", mes12, mes12 - capitalInicial)));
+
+        JButton btnCerrar = createStyledButton("Cerrar", COLOR_LOGOUT, COLOR_TEXT_LIGHT);
+        btnCerrar.addActionListener(e -> dialog.dispose());
+
+        JPanel surPanel = new JPanel();
+        surPanel.add(btnCerrar);
+
+        dialog.add(infoPanel, BorderLayout.NORTH);
+        dialog.add(panelGrafica, BorderLayout.CENTER);
+        dialog.add(surPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private void mostrarGraficaLineal12Meses(double capitalInicial) {
+        JDialog dialog = new JDialog(this, "Gráfica Lineal - 12 Meses (7% Anual)", true);
+        dialog.setSize(800, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        final double TASA_ANUAL = 0.07;
+        final double TASA_MENSUAL = TASA_ANUAL / 12.0;
+        String[] nombresMeses = {"Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"};
+
+        JPanel panelGrafica = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int width = getWidth();
+                int height = getHeight();
+                int padding = 80;
+                int graphWidth = width - 2 * padding;
+                int graphHeight = height - 2 * padding;
+
+                // Dibujar ejes
+                g2d.setColor(Color.BLACK);
+                g2d.drawLine(padding, height - padding, width - padding, height - padding); // Eje X
+                g2d.drawLine(padding, height - padding, padding, padding); // Eje Y
+
+                // Calcular valores para los 12 meses
+                double[] valores = new double[12];
+                double maxValor = capitalInicial;
+                for (int i = 0; i < 12; i++) {
+                    valores[i] = calcularCrecimientoAhorros(capitalInicial, TASA_MENSUAL, i + 1);
+                    maxValor = Math.max(maxValor, valores[i]);
+                }
+
+                // Dibujar línea de progresión
+                g2d.setColor(Color.BLUE);
+                g2d.setStroke(new BasicStroke(3));
+
+                int prevX = 0, prevY = 0;
+                for (int i = 0; i < 12; i++) {
+                    int x = padding + (i * graphWidth) / 11;
+                    int y = height - padding - (int)((valores[i] - capitalInicial) * graphHeight / (maxValor - capitalInicial));
+
+                    // Dibujar punto
+                    g2d.setColor(Color.RED);
+                    g2d.fillOval(x - 4, y - 4, 8, 8);
+
+                    // Dibujar línea desde el punto anterior
+                    if (i > 0) {
+                        g2d.setColor(Color.BLUE);
+                        g2d.drawLine(prevX, prevY, x, y);
+                    }
+
+                    // Etiqueta del valor
+                    g2d.setColor(Color.DARK_GRAY);
+                    g2d.drawString(String.format("$%,.0f", valores[i]), x - 25, y - 10);
+
+                    // Etiqueta del mes
+                    g2d.drawString(nombresMeses[i], x - 10, height - padding + 20);
+
+                    prevX = x;
+                    prevY = y;
+                }
+
+                // Línea de capital inicial
+                g2d.setColor(Color.GREEN);
+                g2d.setStroke(new BasicStroke(2));
+                int yInicial = height - padding;
+                g2d.drawLine(padding, yInicial, width - padding, yInicial);
+                g2d.drawString("Inicio: $" + String.format("%,.0f", capitalInicial), padding + 10, yInicial - 5);
+
+                // Títulos
+                g2d.setColor(Color.BLACK);
+                g2d.setFont(new Font("Arial", Font.BOLD, 16));
+                g2d.drawString("Proyección Anual Completa - 7% Tasa Anual", width / 2 - 180, 30);
+
+                // Leyenda
+                g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                g2d.setColor(Color.BLUE);
+                g2d.drawString("--- Crecimiento Mensual", width - 200, 50);
+                g2d.setColor(Color.RED);
+                g2d.fillOval(width - 200, 70, 8, 8);
+                g2d.drawString("Valor Mensual", width - 185, 75);
+                g2d.setColor(Color.GREEN);
+                g2d.drawString("--- Capital Inicial", width - 200, 90);
+            }
+        };
+
+        panelGrafica.setBackground(Color.WHITE);
+
+        // Tabla de valores detallados
+        JTextArea tablaTexto = new JTextArea();
+        tablaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        tablaTexto.setEditable(false);
+
+        StringBuilder tabla = new StringBuilder();
+        tabla.append("DETALLE DE PROYECCIÓN - 12 MESES (7% ANUAL)\n");
+        tabla.append("═".repeat(60)).append("\n");
+        tabla.append("Mes     Capital Acumulado    Ganancia Mensual    Ganancia Total\n");
+        tabla.append("───     ─────────────────    ────────────────    ─────────────\n");
+
+        double capitalPrev = capitalInicial;
+        for (int i = 0; i < 12; i++) {
+            double capitalActual = calcularCrecimientoAhorros(capitalInicial, TASA_MENSUAL, i + 1);
+            double gananciaMensual = capitalActual - capitalPrev;
+            double gananciaTotal = capitalActual - capitalInicial;
+
+            tabla.append(String.format("%-8s$%,12.2f    $%,12.2f    $%,12.2f\n",
+                    nombresMeses[i], capitalActual, gananciaMensual, gananciaTotal));
+
+            capitalPrev = capitalActual;
+        }
+
+        tablaTexto.setText(tabla.toString());
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("Gráfica", panelGrafica);
+        tabbedPane.addTab("Tabla Detallada", new JScrollPane(tablaTexto));
+
+        JButton btnCerrar = createStyledButton("Cerrar", COLOR_LOGOUT, COLOR_TEXT_LIGHT);
+        btnCerrar.addActionListener(e -> dialog.dispose());
+
+        JPanel surPanel = new JPanel();
+        surPanel.add(btnCerrar);
+
+        dialog.add(tabbedPane, BorderLayout.CENTER);
+        dialog.add(surPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+
+    // Método auxiliar para mostrar la gráfica de inversión
+    private void mostrarGraficaProyeccion(double capitalInicial, double tasaMensual, int mesesMaximos) {
+        StringBuilder datosProyeccion = new StringBuilder();
+        datosProyeccion.append("PROYECCIÓN DETALLADA (Gráfica):\n");
+        datosProyeccion.append("═".repeat(50)).append("\n");
+
+        // Crear representación ASCII simple de la gráfica
+        for (int meses = 1; meses <= mesesMaximos; meses++) {
+            double capital = calcularCrecimientoAhorros(capitalInicial, tasaMensual, meses);
+            double crecimiento = capital - capitalInicial;
+            int barras = (int) (crecimiento / capitalInicial * 40); // Escalar la barra
+
+            datosProyeccion.append(String.format("Mes %2d: $%,8.2f |", meses, capital));
+            datosProyeccion.append("█".repeat(Math.max(0, barras)));
+            datosProyeccion.append(String.format(" (+$%,.2f)\n", crecimiento));
+        }
+
+        // Mostrar en un área de texto con scroll
+        JTextArea textArea = new JTextArea(datosProyeccion.toString());
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setEditable(false);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(600, 300));
+
+        JOptionPane.showMessageDialog(this, scrollPane,
+                "Gráfica de Proyección de Inversión",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void cerrarSesion() {
@@ -876,14 +1242,6 @@ public class BancoUI extends JFrame {
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE);
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                CSVClientLoader.crearEjemplo(RUTA_CSV);
-                showMessage("Archivo Creado", 
-                        "Archivo CSV de ejemplo creado en:\n" + 
-                        new File(RUTA_CSV).getAbsolutePath() +
-                        "\n\nPor favor, reinicia la aplicación para cargar los clientes del nuevo archivo.",
-                        dialog);
-            }
         });
         
         botonesPanel.add(desbloquearButton);

@@ -8,11 +8,8 @@ import java.io.PrintWriter;
 public class CSVClientLoader {
 
     /**
-     * Carga clientes desde un archivo CSV a una HashTable.
-     * El formato esperado del CSV es: ID,Nombre,Monto,NumeroTarjeta,Contraseña
-     * @param rutaArchivo La ruta del archivo CSV.
-     * @param clientesTable La tabla hash donde se cargarán los clientes.
-     * @return El número de clientes nuevos cargados.
+     * Carga clientes desde un CSV con 7 columnas.
+     * Formato: ID,Nombre,Monto,MontoAhorros,NumeroTarjeta,password,TarjetaBloqueada
      */
     public static int cargarClientes(String rutaArchivo, HashTable clientesTable) {
         int clientesCargados = 0;
@@ -20,81 +17,70 @@ public class CSVClientLoader {
         File archivo = new File(rutaArchivo);
 
         if (!archivo.exists()) {
-            System.err.println("El archivo CSV no existe en la ruta: " + rutaArchivo);
+            System.err.println("ERROR: El archivo CSV no existe en la ruta: " + rutaArchivo);
             return 0;
         }
 
         try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
-            // Omitir la cabecera si existe
-            br.readLine();
+            br.readLine(); // Omitir la cabecera
             while ((linea = br.readLine()) != null) {
                 if (linea.trim().isEmpty()) continue;
                 String[] datos = linea.split(",");
-                if (datos.length == 6) {
+
+                // CAMBIO: Ahora busca exactamente 7 columnas, como en tu archivo.
+                if (datos.length == 7) {
                     try {
                         int id = Integer.parseInt(datos[0].trim());
                         String nombre = datos[1].trim();
                         int monto = Integer.parseInt(datos[2].trim());
-                        String numeroTarjeta = datos[3].trim();
-                        String contrasena = datos[4].trim();
-                        Boolean tarjetaBloqueada = Boolean.parseBoolean(datos[5].trim());
+                        int montoAhorros = Integer.parseInt(datos[3].trim()); // Nuevo campo leído
+                        String numeroTarjeta = datos[4].trim();
+                        String contrasena = datos[5].trim();
+                        Boolean tarjetaBloqueada = Boolean.parseBoolean(datos[6].trim());
 
                         if (!clientesTable.contains(numeroTarjeta)) {
-                            Cliente nuevoCliente = new Cliente(id, nombre, monto, numeroTarjeta, contrasena, tarjetaBloqueada);
+                            // IMPORTANTE: El constructor de Cliente DEBE aceptar 'montoAhorros'.
+                            Cliente nuevoCliente = new Cliente(id, nombre, monto, montoAhorros, numeroTarjeta, contrasena, tarjetaBloqueada);
                             clientesTable.put(numeroTarjeta, nuevoCliente);
                             clientesCargados++;
                         }
                     } catch (NumberFormatException e) {
                         System.err.println("Error de formato en línea CSV: " + linea);
                     }
+                } else {
+                    System.err.println("ADVERTENCIA: Se omitió una línea con formato incorrecto (no tiene 7 columnas): " + linea);
                 }
             }
         } catch (IOException e) {
             System.err.println("Error al leer el archivo CSV: " + e.getMessage());
         }
+        System.out.println("Carga finalizada. Clientes cargados: " + clientesCargados);
         return clientesCargados;
     }
+    // EN TU CLASE CSVClientLoader.java
 
-    /**
-     * Guarda un nuevo cliente en el archivo CSV. Si el archivo no existe, lo crea.
-     * @param cliente El cliente a guardar.
-     * @param rutaArchivo La ruta del archivo CSV.
-     */
     public static void guardarCliente(Cliente cliente, String rutaArchivo) {
         File archivo = new File(rutaArchivo);
         boolean existe = archivo.exists();
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo, true))) {
             if (!existe || archivo.length() == 0) {
-                writer.println("ID,Nombre,Monto,NumeroTarjeta,password,TarjetaBloqueada");
+                // Cabecera de 7 columnas
+                writer.println("ID,Nombre,Monto,MontoAhorros,NumeroTarjeta,password,TarjetaBloqueada");
             }
-            writer.printf("%d,%s,%f,%s,%s,%b\n",
+
+            // CORRECCIÓN: Se añade cliente.MontoAhorros para guardar los 7 campos
+            writer.printf("%d,%s,%d,%d,%s,%s,%b\n",
                     cliente.ID,
                     cliente.Nombre,
                     cliente.Monto,
+                    cliente.montoAhorros, // Este es el campo que faltaba
                     cliente.NumeroTarjeta,
                     cliente.getContraseña(),
                     cliente.tarjetaBloqueada);
+
         } catch (IOException e) {
             System.err.println("Error al guardar el cliente en el archivo CSV: " + e.getMessage());
-        }
-    }
-
-
-    /**
-     * Crea un archivo CSV de ejemplo con datos de clientes, incluyendo contraseñas.
-     * @param rutaArchivo La ruta donde se guardará el archivo de ejemplo.
-     */
-    public static void crearEjemplo(String rutaArchivo) {
-        try (FileWriter writer = new FileWriter(rutaArchivo)) {
-            writer.append("ID,Nombre,Monto,NumeroTarjeta,Contraseña\n");
-            writer.append("1,Juan Perez,7500,5201169781530257,juan123\n");
-            writer.append("2,Maria Garcia,12000,4509297861614535,maria456\n");
-            writer.append("3,Carlos Lopez,3500,4555061037596247,carlos789\n");
-            writer.append("4,Ana Rodriguez,9800,4915762317479773,ana012\n");
-            writer.append("5,Pedro Martinez,15000,5161034964107141,pedro345\n");
-        } catch (IOException e) {
-            System.err.println("Error al crear el archivo CSV de ejemplo: " + e.getMessage());
         }
     }
 }

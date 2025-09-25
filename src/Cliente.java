@@ -25,15 +25,18 @@ public class Cliente {
         this.tarjetaBloqueada = false;
     }
 
-    public Cliente(int ID, String Nombre, int Monto, String NumeroTarjeta, String contraseña, boolean TarjetaBloqueada) {
-        this.ID = ID;
-        this.Nombre = Nombre;
-        this.Monto = Monto;
-        this.NumeroTarjeta = NumeroTarjeta;
-        this.sesionActiva = false;
-        this.contraseña = contraseña;
-        this.pilaHistorial = new Stack<>(); // AÑADIDO: Se inicializa el historial
-        this.tarjetaBloqueada = TarjetaBloqueada;
+    // EN TU CLASE Cliente.java
+// En Cliente.java - Asegurar que el constructor tenga 7 parámetros
+    public Cliente(int id, String nombre, int monto, int montoAhorros, String numeroTarjeta, String contrasena, Boolean tarjetaBloqueada) {
+        this.ID = id;
+        this.Nombre = nombre;
+        this.Monto = monto;
+        this.montoAhorros = montoAhorros; // Este campo es crucial
+        this.NumeroTarjeta = numeroTarjeta;
+        this.contraseña = contrasena;
+        this.tarjetaBloqueada = tarjetaBloqueada;
+        this.pilaHistorial = new Stack<>();
+        this.posibleFraude = false;
     }
 
     public Cliente(int monto, String transaccion, int i, String s) {
