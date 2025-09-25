@@ -18,13 +18,14 @@ public class CSVClientLoader {
 
         if (!archivo.exists()) {
             System.err.println("ERROR: El archivo CSV no existe en la ruta: " + rutaArchivo);
+            System.err.println("Directorio de Trabajo actual: " + System.getProperty("user.dir"));
+            System.err.println("Ruta absoluta buscada: " + archivo.getAbsolutePath());
             return 0;
         }
 
         try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
             br.readLine(); // Omitir la cabecera
             while ((linea = br.readLine()) != null) {
-                if (linea.trim().isEmpty()) continue;
                 String[] datos = linea.split(",");
 
                 // CAMBIO: Ahora busca exactamente 7 columnas, como en tu archivo.
@@ -62,6 +63,9 @@ public class CSVClientLoader {
     public static void guardarCliente(Cliente cliente, String rutaArchivo) {
         File archivo = new File(rutaArchivo);
         boolean existe = archivo.exists();
+
+        // Asegurar que el directorio exista antes de escribir
+        CSVPathResolver.crearDirectorioSiNoExiste(rutaArchivo);
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo, true))) {
             if (!existe || archivo.length() == 0) {

@@ -18,7 +18,7 @@ public class BancoUI extends JFrame {
     private Cliente clienteSesion;
     private Empleado empleadoSesion;
     private Queue<String> colaTransferencias;
-    private static final String RUTA_CSV = "src/clientes.csv";
+    private static final String RUTA_CSV = CSVPathResolver.obtenerRutaCSV();
     private static final String USUARIO_ADMIN = "admin";
     private static final String CONTRASENA_ADMIN = "admin123";
 
@@ -256,10 +256,10 @@ public class BancoUI extends JFrame {
         clienteLabel = new JLabel("Cliente: ");
         clienteLabel.setFont(FONT_HEADER);
         clienteLabel.setForeground(COLOR_TEXT_LIGHT);
-        saldoLabel = new JLabel("Saldo Principal: $");
+        saldoLabel = new JLabel("Saldo Principal: ");
         saldoLabel.setFont(FONT_BODY);
         saldoLabel.setForeground(COLOR_TEXT_LIGHT);
-        ahorrosLabel = new JLabel("Saldo Ahorrado: $");
+        ahorrosLabel = new JLabel("Saldo Ahorrado: ");
         ahorrosLabel.setFont(FONT_BODY);
         ahorrosLabel.setForeground(COLOR_TEXT_LIGHT);
         infoPanel.add(clienteLabel);
@@ -384,8 +384,8 @@ public class BancoUI extends JFrame {
         TransactionHistoryTree sortedHistoryTree = new TransactionHistoryTree();
         Stack<String> historialCopy = getHistoryElements(); // Obtiene una copia segura para consumir
 
-        // Expresión regular para encontrar montos con signo, ej: +$100, -$50
-        Pattern pattern = Pattern.compile("([+-])\\$(\\d+)");
+        // Expresión regular para encontrar montos con signo y posible sufijo MXN, ej: +$1,000.50 MXN, -$50
+        Pattern pattern = Pattern.compile("([+-])\\$([\\d,]+(?:\\.\\d{1,2})?)(?:\\s*MXN)?");
 
         try {
             while (!historialCopy.isEmpty()) {
@@ -393,7 +393,8 @@ public class BancoUI extends JFrame {
                 Matcher matcher = pattern.matcher(item);
                 if (matcher.find()) {
                     String sign = matcher.group(1);
-                    int amount = Integer.parseInt(matcher.group(2));
+                    String amountStr = matcher.group(2).replace(",", "");
+                    int amount = (int)Math.round(Double.parseDouble(amountStr));
                     if ("-".equals(sign)) {
                         amount *= -1; // Convertir retiros a números negativos para la ordenación
                     }
@@ -659,7 +660,7 @@ public class BancoUI extends JFrame {
         dialog.setLayout(new BorderLayout(10, 10));
         dialog.getContentPane().setBackground(COLOR_BACKGROUND);
 
-        JLabel ahorrosActualLabel = new JLabel(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros), SwingConstants.CENTER);
+        JLabel ahorrosActualLabel = new JLabel(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)), SwingConstants.CENTER);
         ahorrosActualLabel.setFont(FONT_HEADER);
         ahorrosActualLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -669,11 +670,11 @@ public class BancoUI extends JFrame {
 
         // Botones existentes...
         botonesPanel.add(createStyledButton("Depositar en Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {
-            String montoStr = JOptionPane.showInputDialog(dialog, "Monto a depositar (mín. $100):", "Depositar", JOptionPane.PLAIN_MESSAGE);
+            String montoStr = JOptionPane.showInputDialog(dialog, "Monto a depositar (mín. $100 MXN):", "Depositar", JOptionPane.PLAIN_MESSAGE);
             try {
                 int monto = Integer.parseInt(montoStr);
                 if (monto < 100) {
-                    showError("El depósito mínimo es de $100.", dialog);
+                    showError("El depósito mínimo es de $100 MXN.", dialog);
                 } else if (monto > clienteSesion.Monto) {
                     showError("Fondos insuficientes en cuenta principal.", dialog);
                 } else {
@@ -681,7 +682,7 @@ public class BancoUI extends JFrame {
                     clienteSesion.montoAhorros += monto;
                     clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -%s [%s]", formatoMonto(monto), getTimestamp()));
                     actualizarInfoCliente();
-                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
+                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)));
                     showMessage("Éxito", "Depósito a ahorros exitoso.", dialog);
                 }
             } catch (Exception ex) {
@@ -716,8 +717,12 @@ public class BancoUI extends JFrame {
                 double en1 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 1);
                 double en6 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 6);
                 double en12 = calcularCrecimientoAhorros(clienteSesion.montoAhorros, TASA_MENSUAL, 12);
-                String proy = String.format("Proyección para $%,.2f (7%% Anual):\n\n- En 1 mes:   $%,.2f\n- En 6 meses: $%,.2f\n- En 1 año:   $%,.2f\n",
-                        clienteSesion.montoAhorros, en1, en6, en12);
+                String proy = String.format(
+                        "Proyección para %s (7%% Anual):\n\n- En 1 mes:   %s\n- En 6 meses: %s\n- En 1 año:   %s\n",
+                        formatoMonto(clienteSesion.montoAhorros),
+                        formatoMonto(en1),
+                        formatoMonto(en6),
+                        formatoMonto(en12));
 
                 // Crear un panel personalizado con las opciones de gráfica
                 JPanel panelProyeccion = new JPanel(new BorderLayout(10, 10));
@@ -843,7 +848,7 @@ public class BancoUI extends JFrame {
 
                     // Etiqueta del valor
                     g2d.setColor(Color.BLACK);
-                    g2d.drawString(String.format("$%,.0f", valores[i]), x, y - 5);
+                    g2d.drawString(String.format("$%,.0f MXN", valores[i]), x, y - 5);
 
                     // Etiqueta del mes
                     g2d.drawString(meses[i], x + barWidth/2 - 20, height - padding + 20);
@@ -860,7 +865,7 @@ public class BancoUI extends JFrame {
                 g2d.setFont(new Font("Arial", Font.BOLD, 16));
                 g2d.drawString("Proyección de Inversión - 7% Anual", width / 2 - 150, 30);
                 g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-                g2d.drawString("Capital Inicial: $" + String.format("%,.2f", capitalInicial), width / 2 - 80, 50);
+                g2d.drawString("Capital Inicial: $" + String.format("%,.2f", capitalInicial) + " MXN", width / 2 - 80, 50);
             }
         };
 
@@ -870,13 +875,13 @@ public class BancoUI extends JFrame {
         JPanel infoPanel = new JPanel(new GridLayout(4, 2, 10, 5));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         infoPanel.add(new JLabel("Capital Inicial:"));
-        infoPanel.add(new JLabel(String.format("$%,.2f", capitalInicial)));
+        infoPanel.add(new JLabel(String.format("$%,.2f MXN", capitalInicial)));
         infoPanel.add(new JLabel("Mes 1:"));
-        infoPanel.add(new JLabel(String.format("$%,.2f (+$%,.2f)", mes1, mes1 - capitalInicial)));
+        infoPanel.add(new JLabel(String.format("$%,.2f MXN (+$%,.2f MXN)", mes1, mes1 - capitalInicial)));
         infoPanel.add(new JLabel("Mes 6:"));
-        infoPanel.add(new JLabel(String.format("$%,.2f (+$%,.2f)", mes6, mes6 - capitalInicial)));
+        infoPanel.add(new JLabel(String.format("$%,.2f MXN (+$%,.2f MXN)", mes6, mes6 - capitalInicial)));
         infoPanel.add(new JLabel("Mes 12:"));
-        infoPanel.add(new JLabel(String.format("$%,.2f (+$%,.2f)", mes12, mes12 - capitalInicial)));
+        infoPanel.add(new JLabel(String.format("$%,.2f MXN (+$%,.2f MXN)", mes12, mes12 - capitalInicial)));
 
         JButton btnCerrar = createStyledButton("Cerrar", COLOR_LOGOUT, COLOR_TEXT_LIGHT);
         btnCerrar.addActionListener(e -> dialog.dispose());
@@ -948,7 +953,7 @@ public class BancoUI extends JFrame {
 
                     // Etiqueta del valor
                     g2d.setColor(Color.DARK_GRAY);
-                    g2d.drawString(String.format("$%,.0f", valores[i]), x - 25, y - 10);
+                    g2d.drawString(String.format("$%,.0f MXN", valores[i]), x - 25, y - 10);
 
                     // Etiqueta del mes
                     g2d.drawString(nombresMeses[i], x - 10, height - padding + 20);
@@ -962,7 +967,7 @@ public class BancoUI extends JFrame {
                 g2d.setStroke(new BasicStroke(2));
                 int yInicial = height - padding;
                 g2d.drawLine(padding, yInicial, width - padding, yInicial);
-                g2d.drawString("Inicio: $" + String.format("%,.0f", capitalInicial), padding + 10, yInicial - 5);
+                g2d.drawString("Inicio: $" + String.format("%,.0f", capitalInicial) + " MXN", padding + 10, yInicial - 5);
 
                 // Títulos
                 g2d.setColor(Color.BLACK);
@@ -1000,7 +1005,7 @@ public class BancoUI extends JFrame {
             double gananciaMensual = capitalActual - capitalPrev;
             double gananciaTotal = capitalActual - capitalInicial;
 
-            tabla.append(String.format("%-8s$%,12.2f    $%,12.2f    $%,12.2f\n",
+            tabla.append(String.format("%-8s$%,12.2f MXN    $%,12.2f MXN    $%,12.2f MXN\n",
                     nombresMeses[i], capitalActual, gananciaMensual, gananciaTotal));
 
             capitalPrev = capitalActual;
@@ -1036,9 +1041,9 @@ public class BancoUI extends JFrame {
             double crecimiento = capital - capitalInicial;
             int barras = (int) (crecimiento / capitalInicial * 40); // Escalar la barra
 
-            datosProyeccion.append(String.format("Mes %2d: $%,8.2f |", meses, capital));
+            datosProyeccion.append(String.format("Mes %2d: $%,8.2f MXN |", meses, capital));
             datosProyeccion.append("█".repeat(Math.max(0, barras)));
-            datosProyeccion.append(String.format(" (+$%,.2f)\n", crecimiento));
+            datosProyeccion.append(String.format(" (+$%,.2f MXN)\n", crecimiento));
         }
 
         // Mostrar en un área de texto con scroll
@@ -1064,8 +1069,8 @@ public class BancoUI extends JFrame {
     private void actualizarInfoCliente() {
         if (clienteSesion != null) {
             clienteLabel.setText("Cliente: " + clienteSesion.Nombre);
-            saldoLabel.setText(String.format("Saldo Principal: $%,.2f", clienteSesion.Monto));
-            ahorrosLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
+            saldoLabel.setText(String.format("Saldo Principal: %s", formatoMonto(clienteSesion.Monto)));
+            ahorrosLabel.setText(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)));
         }
     }
 
@@ -1261,7 +1266,7 @@ public class BancoUI extends JFrame {
     }
 
     private String formatoMonto(double monto) {
-        return String.format("$%,.2f", monto);
+        return String.format("$%,.2f MXN", monto);
     }
 
     public static void main(String[] args) {
