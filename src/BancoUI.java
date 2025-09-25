@@ -18,7 +18,7 @@ public class BancoUI extends JFrame {
     private Cliente clienteSesion;
     private Empleado empleadoSesion;
     private Queue<String> colaTransferencias;
-    private static final String RUTA_CSV = "src/clientes.csv";
+    private static final String RUTA_CSV = CSVPathResolver.obtenerRutaCSV();
     private static final String USUARIO_ADMIN = "admin";
     private static final String CONTRASENA_ADMIN = "admin123";
 
