@@ -3,16 +3,11 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDateTime;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 import java.text.ParseException;
 import java.util.Locale;
@@ -889,42 +884,144 @@ public class BancoUI extends JFrame {
 
         // Botones existentes...
         botonesPanel.add(createStyledButton("Depositar en Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {
-            String montoStr = JOptionPane.showInputDialog(dialog, "Monto a depositar (mín. $100 MXN):", "Depositar", JOptionPane.PLAIN_MESSAGE);
-            try {
-                int monto = Integer.parseInt(montoStr);
-                if (monto < 100) {
-                    showError("El depósito mínimo es de $100 MXN.", dialog);
-                } else if (monto > clienteSesion.Monto) {
-                    showError("Fondos insuficientes en cuenta principal.", dialog);
-                } else {
-                    clienteSesion.Monto -= monto;
-                    clienteSesion.montoAhorros += monto;
-                    clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -%s [%s]", formatoMonto(monto), getTimestamp()));
-                    actualizarInfoCliente();
-                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)));
-                    showMessage("Éxito", "Depósito a ahorros exitoso.", dialog);
+            // Configurar el formato de número con comas y decimales
+            NumberFormat format = NumberFormat.getNumberInstance(Locale.US);
+            format.setGroupingUsed(true);
+            format.setMaximumFractionDigits(2);
+            format.setMinimumFractionDigits(2);
+            
+            // Crear un formateador más permisivo
+            NumberFormatter formatter = new NumberFormatter() {
+                @Override
+                public Object stringToValue(String text) throws ParseException {
+                    try {
+                        if (text == null || text.trim().isEmpty()) {
+                            return 0.0;
+                        }
+                        // Reemplazar comas si el usuario las usa como separador decimal
+                        text = text.replaceAll("[,]", "");
+                        return format.parse(text);
+                    } catch (ParseException e) {
+                        throw new ParseException("Formato de número inválido", 0);
+                    }
                 }
-            } catch (Exception ex) {
-                showError("Monto inválido.", dialog);
+                
+                @Override
+                public String valueToString(Object value) {
+                    if (value == null) return "";
+                    return format.format(value);
+                }
+            };
+            
+            formatter.setValueClass(Double.class);
+            formatter.setAllowsInvalid(false);
+            formatter.setCommitsOnValidEdit(true);
+            formatter.setMinimum(0.0);
+            formatter.setMaximum(Double.MAX_VALUE);
+            
+            JFormattedTextField montoField = new JFormattedTextField(formatter);
+            montoField.setColumns(15);
+            montoField.setValue(100.00);
+            montoField.setFocusLostBehavior(JFormattedTextField.PERSIST);
+            
+            JPanel panel = new JPanel();
+            panel.add(new JLabel("Monto a depositar (mín. $100.00 MXN):"));
+            panel.add(montoField);
+            
+            int result = JOptionPane.showConfirmDialog(dialog, panel, "Depositar", 
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                    
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    Number value = (Number) montoField.getValue();
+                    double monto = value != null ? value.doubleValue() : 0.0;
+                    
+                    if (monto < 100) {
+                        showError("El depósito mínimo es de $100.00 MXN.", dialog);
+                    } else if (monto > clienteSesion.Monto) {
+                        showError("Fondos insuficientes en cuenta principal.", dialog);
+                    } else {
+                        clienteSesion.Monto -= monto;
+                        clienteSesion.montoAhorros += monto;
+                        clienteSesion.getPilaHistorial().push(String.format("Depósito Ahorros: -%s [%s]", formatoMonto(monto), getTimestamp()));
+                        actualizarInfoCliente();
+                        ahorrosActualLabel.setText(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)));
+                        showMessage("Éxito", String.format("Depósito de %s a ahorros exitoso.", formatoMonto(monto)), dialog);
+                    }
+                } catch (Exception ex) {
+                    showError("Monto inválido: " + ex.getMessage(), dialog);
+                }
             }
         }));
 
-        botonesPanel.add(createStyledButton("Retirar de Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {            // Código existente para retirar...
-            String montoStr = JOptionPane.showInputDialog(dialog, "Monto a retirar de ahorros:", "Retirar", JOptionPane.PLAIN_MESSAGE);
-            try {
-                int monto = Integer.parseInt(montoStr);
-                if (monto > 0 && monto <= clienteSesion.montoAhorros) {
-                    clienteSesion.montoAhorros -= monto;
-                    clienteSesion.Monto += monto;
-                    clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +%s [%s]", formatoMonto(monto), getTimestamp()));
-                    actualizarInfoCliente();
-                    ahorrosActualLabel.setText(String.format("Saldo Ahorrado: $%,.2f", clienteSesion.montoAhorros));
-                    showMessage("Éxito", "Retiro de ahorros exitoso.", dialog);
-                } else {
-                    showError("Monto no válido o fondos insuficientes.", dialog);
+        botonesPanel.add(createStyledButton("Retirar de Ahorros", COLOR_ACCENT, COLOR_TEXT_LIGHT, e -> {
+            // Configurar el formato de número con comas y decimales
+            NumberFormat format = NumberFormat.getNumberInstance(Locale.US);
+            format.setGroupingUsed(true);
+            format.setMaximumFractionDigits(2);
+            format.setMinimumFractionDigits(2);
+            
+            // Crear un formateador más permisivo
+            NumberFormatter formatter = new NumberFormatter() {
+                @Override
+                public Object stringToValue(String text) throws ParseException {
+                    try {
+                        if (text == null || text.trim().isEmpty()) {
+                            return 0.0;
+                        }
+                        // Reemplazar comas si el usuario las usa como separador decimal
+                        text = text.replaceAll("[,]", "");
+                        return format.parse(text);
+                    } catch (ParseException e) {
+                        throw new ParseException("Formato de número inválido", 0);
+                    }
                 }
-            } catch (Exception ex) {
-                showError("Monto inválido.", dialog);
+                
+                @Override
+                public String valueToString(Object value) {
+                    if (value == null) return "";
+                    return format.format(value);
+                }
+            };
+            
+            formatter.setValueClass(Double.class);
+            formatter.setAllowsInvalid(false);
+            formatter.setCommitsOnValidEdit(true);
+            formatter.setMinimum(0.0);
+            formatter.setMaximum(clienteSesion.montoAhorros);
+            
+            JFormattedTextField montoField = new JFormattedTextField(formatter);
+            montoField.setColumns(15);
+            montoField.setValue(0.00);
+            montoField.setFocusLostBehavior(JFormattedTextField.PERSIST);
+            
+            JPanel panel = new JPanel();
+            panel.add(new JLabel("Monto a retirar (máx. " + formatoMonto(clienteSesion.montoAhorros) + "):"));
+            panel.add(montoField);
+            
+            int result = JOptionPane.showConfirmDialog(dialog, panel, "Retirar", 
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                    
+            if (result == JOptionPane.OK_OPTION) {
+                try {
+                    Number value = (Number) montoField.getValue();
+                    double monto = value != null ? value.doubleValue() : 0.0;
+                    
+                    if (monto <= 0) {
+                        showError("El monto debe ser mayor a cero.", dialog);
+                    } else if (monto > clienteSesion.montoAhorros) {
+                        showError("Fondos insuficientes en la cuenta de ahorros.", dialog);
+                    } else {
+                        clienteSesion.montoAhorros -= monto;
+                        clienteSesion.Monto += monto;
+                        clienteSesion.getPilaHistorial().push(String.format("Retiro Ahorros: +%s [%s]", formatoMonto(monto), getTimestamp()));
+                        actualizarInfoCliente();
+                        ahorrosActualLabel.setText(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)));
+                        showMessage("Éxito", String.format("Retiro de %s de ahorros exitoso.", formatoMonto(monto)), dialog);
+                    }
+                } catch (Exception ex) {
+                    showError("Monto inválido: " + ex.getMessage(), dialog);
+                }
             }
         }));
 
