@@ -23,7 +23,7 @@ public class BancoUI extends JFrame {
     private HashTable clientesTable;
     private Cliente clienteSesion;
     private Empleado empleadoSesion;
-    private Queue<String> colaTransferencias;
+    private Queue<Float> colaTransferencias;
     private static final String RUTA_CSV = CSVPathResolver.obtenerRutaCSV();
     private static final String USUARIO_ADMIN = "admin";
     private static final String CONTRASENA_ADMIN = "admin123";
@@ -690,37 +690,124 @@ public class BancoUI extends JFrame {
             return;
         }
         
-        JTextField tarjetaField = createStyledTextField(), NameField = createStyledTextField(), montoField = createStyledTextField();
-        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5)); panel.setBackground(COLOR_BACKGROUND);
-        panel.add(new JLabel("Nº Tarjeta del Destinatario:")); panel.add(tarjetaField);
-        panel.add(new JLabel("Nombre del Destinatario:")); panel.add(NameField);
-        panel.add(new JLabel("Monto a Transferir:")); panel.add(montoField);
-        int result = JOptionPane.showConfirmDialog(this, panel, "Realizar Transferencia", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        // Crear campos de entrada
+        JTextField tarjetaField = createStyledTextField();
+        JTextField nameField = createStyledTextField();
+        
+        // Configurar el formato de número con comas y decimales para el monto
+        NumberFormat format = NumberFormat.getNumberInstance(Locale.US);
+        format.setGroupingUsed(true);
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(2);  // Siempre mostrar 2 decimales
+        
+        NumberFormatter formatter = new NumberFormatter(format) {
+            @Override
+            public Object stringToValue(String text) throws ParseException {
+                if (text == null || text.trim().isEmpty()) {
+                    return 0.0;
+                }
+                // Permitir punto decimal al final (para escribir decimales)
+                text = text.trim();
+                if (text.endsWith(".")) {
+                    return 0.0; // Valor temporal mientras se escribe
+                }
+                // Reemplazar comas para el parseo
+                text = text.replace(",", "");
+                return super.stringToValue(text);
+            }
+            
+            @Override
+            public String valueToString(Object value) throws ParseException {
+                if (value == null) return "";
+                // Formatear con 2 decimales y comas
+                return String.format("%,.2f", ((Number)value).doubleValue());
+            }
+        };
+        
+        formatter.setValueClass(Double.class);
+        formatter.setMinimum(0.0);
+        formatter.setAllowsInvalid(false);
+        formatter.setCommitsOnValidEdit(true);
+        
+        JFormattedTextField montoField = new JFormattedTextField(formatter);
+        montoField.setColumns(15);
+        montoField.setFont(FONT_BODY);
+        montoField.setValue(0.0);
+
+        // Panel para el diálogo
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.setBackground(COLOR_BACKGROUND);
+        panel.add(new JLabel("Nº Tarjeta del Destinatario:"));
+        panel.add(tarjetaField);
+        panel.add(new JLabel("Nombre del Destinatario:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Monto a Transferir:"));
+        panel.add(montoField);
+        
+        // Mostrar el diálogo
+        int result = JOptionPane.showConfirmDialog(this, panel, "Realizar Transferencia", 
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                
         if (result == JOptionPane.OK_OPTION) {
             try {
-                String tarjetaDest = tarjetaField.getText(); String NameDest = NameField.getText(); float monto = Float.parseFloat(montoField.getText());
+                String tarjetaDest = tarjetaField.getText().trim();
+                String nameDest = nameField.getText().trim();
+                
+                // Obtener el valor y convertirlo a double
+                Number value = (Number) montoField.getValue();
+                double monto = value != null ? value.doubleValue() : 0.0;
+                
+                // Validaciones
+                if (tarjetaDest.isEmpty() || nameDest.isEmpty()) {
+                    showError("Todos los campos son obligatorios.");
+                    return;
+                }
+                
                 Cliente destinatario = clientesTable.get(tarjetaDest);
-                if (destinatario == null) { showError("Nº de Tarjeta no encontrado."); return; }
-                if (!Objects.equals(destinatario.Nombre, NameDest)) { showError("El Nombre no corresponde al titular de la tarjeta."); return; }
-                if (monto <= 0 || monto > clienteSesion.Monto) { showError("Monto no válido o fondos insuficientes."); return; }
+                if (destinatario == null) { 
+                    showError("Nº de Tarjeta no encontrado."); 
+                    return; 
+                }
+                
+                if (!destinatario.Nombre.equalsIgnoreCase(nameDest)) { 
+                    showError("El nombre no corresponde al titular de la tarjeta."); 
+                    return; 
+                }
+                
+                if (monto <= 0) {
+                    showError("El monto debe ser mayor a cero.");
+                    return;
+                }
+                
+                if (monto > clienteSesion.Monto) { 
+                    showError("Fondos insuficientes."); 
+                    return; 
+                }
 
                 // Usar el método Transferir() del cliente para detectar actividad inusual
-                boolean esTransferenciaInusual = clienteSesion.Transferir(monto);
-                destinatario.Depositar(monto);
-                colaTransferencias.enqueue(monto);
+                boolean esTransferenciaInusual = clienteSesion.Transferir((float)monto);
+                destinatario.Depositar((float)monto);
+                colaTransferencias.enqueue((float)monto);
 
-                // MODIFICADO: Añade registro con fecha y hora a ambos clientes
+                // Añadir registro con fecha y hora a ambos clientes
                 String timestamp = getTimestamp();
-                clienteSesion.getPilaHistorial().push(String.format("Transferencia a %s: -%s [%s]", destinatario.Nombre, formatoMonto(monto), timestamp));
-                destinatario.getPilaHistorial().push(String.format("Transferencia de %s: +%s [%s]", clienteSesion.Nombre, formatoMonto(monto), timestamp));
+                clienteSesion.getPilaHistorial().push(
+                    String.format("Transferencia a %s: -%s [%s]", destinatario.Nombre, formatoMonto(monto), timestamp)
+                );
+                destinatario.getPilaHistorial().push(
+                    String.format("Transferencia de %s: +%s [%s]", clienteSesion.Nombre, formatoMonto(monto), timestamp)
+                );
 
                 actualizarInfoCliente();
                 if (!esTransferenciaInusual) {
-                    showMessage("Éxito", "Transferencia realizada con éxito.");
+                    showMessage("Éxito", "Transferencia de " + formatoMonto(monto) + " realizada con éxito a " + destinatario.Nombre + ".");
                 } else {
                     mostrarDialogoTransferenciaSospechosa();
                 }
-            } catch (Exception e) { showError("Datos inválidos. Verifique la información."); }
+            } catch (Exception e) { 
+                showError("Datos inválidos. Verifique la información."); 
+                e.printStackTrace();
+            }
         }
     }
 
