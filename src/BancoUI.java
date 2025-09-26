@@ -526,11 +526,11 @@ public class BancoUI extends JFrame {
             return;
         }
 
-        // Configurar el formato de número con comas
+        // Configurar el formato de número con comas y decimales
         NumberFormat format = NumberFormat.getNumberInstance(Locale.US);
         format.setGroupingUsed(true);
         format.setMaximumFractionDigits(2);
-        format.setMinimumFractionDigits(0);
+        format.setMinimumFractionDigits(2);  // Siempre mostrar 2 decimales
         
         NumberFormatter formatter = new NumberFormatter(format) {
             @Override
@@ -538,12 +538,21 @@ public class BancoUI extends JFrame {
                 if (text == null || text.trim().isEmpty()) {
                     return 0.0;
                 }
-                // Asegurarse de que el texto no termine con punto
+                // Permitir punto decimal al final (para escribir decimales)
                 text = text.trim();
                 if (text.endsWith(".")) {
-                    text = text.substring(0, text.length() - 1);
+                    return 0.0; // Valor temporal mientras se escribe
                 }
+                // Reemplazar comas para el parseo
+                text = text.replace(",", "");
                 return super.stringToValue(text);
+            }
+            
+            @Override
+            public String valueToString(Object value) throws ParseException {
+                if (value == null) return "";
+                // Formatear con 2 decimales y comas
+                return String.format("%,.2f", ((Number)value).doubleValue());
             }
         };
         
