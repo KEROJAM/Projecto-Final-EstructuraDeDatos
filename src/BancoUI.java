@@ -604,18 +604,84 @@ public class BancoUI extends JFrame {
             showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
             return;
         }
+
+        // Configurar el formato de número con comas y decimales
+        NumberFormat format = NumberFormat.getNumberInstance(Locale.US);
+        format.setGroupingUsed(true);
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(2);  // Siempre mostrar 2 decimales
         
-        String montoStr = JOptionPane.showInputDialog(this, "Ingrese el monto a retirar:", "Retiro", JOptionPane.PLAIN_MESSAGE);
-        try {
-            float monto = Float.parseFloat(montoStr);
-            if (monto <= 0) { showError("El monto debe ser positivo."); return; }
-            if (monto > clienteSesion.Monto) { showError("Fondos insuficientes."); return; }
-            clienteSesion.Monto -= monto;
-            // MODIFICADO: Añade registro con fecha y hora
-            clienteSesion.getPilaHistorial().push(String.format("Retiro: -%s [%s]", formatoMonto(monto), getTimestamp()));
-            actualizarInfoCliente();
-            showMessage("Éxito", "Retiro de " + formatoMonto(monto) + " realizado con éxito.");
-        } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
+        NumberFormatter formatter = new NumberFormatter(format) {
+            @Override
+            public Object stringToValue(String text) throws ParseException {
+                if (text == null || text.trim().isEmpty()) {
+                    return 0.0;
+                }
+                // Permitir punto decimal al final (para escribir decimales)
+                text = text.trim();
+                if (text.endsWith(".")) {
+                    return 0.0; // Valor temporal mientras se escribe
+                }
+                // Reemplazar comas para el parseo
+                text = text.replace(",", "");
+                return super.stringToValue(text);
+            }
+            
+            @Override
+            public String valueToString(Object value) throws ParseException {
+                if (value == null) return "";
+                // Formatear con 2 decimales y comas
+                return String.format("%,.2f", ((Number)value).doubleValue());
+            }
+        };
+        
+        formatter.setValueClass(Double.class);
+        formatter.setMinimum(0.0);
+        formatter.setAllowsInvalid(false);
+        formatter.setCommitsOnValidEdit(true);
+        
+        JFormattedTextField montoField = new JFormattedTextField(formatter);
+        montoField.setColumns(15);
+        montoField.setFont(FONT_BODY);
+        montoField.setValue(0.0);
+
+        // Panel para el diálogo
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.setBackground(COLOR_BACKGROUND);
+        panel.add(new JLabel("Ingrese el monto a retirar:"));
+        panel.add(montoField);
+        
+        // Mostrar el diálogo
+        int result = JOptionPane.showConfirmDialog(this, panel, "Retiro", 
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                // Obtener el valor y convertirlo a double
+                Number value = (Number) montoField.getValue();
+                double monto = value != null ? value.doubleValue() : 0.0;
+
+                if (monto <= 0) {
+                    showError("El monto debe ser positivo.");
+                    return;
+                }
+                
+                if (monto > clienteSesion.Monto) {
+                    showError("Fondos insuficientes.");
+                    return;
+                }
+
+                // Realizar el retiro
+                clienteSesion.Monto -= monto;
+                clienteSesion.getPilaHistorial().push(
+                    String.format("Retiro: -%s [%s]", formatoMonto(monto), getTimestamp())
+                );
+                actualizarInfoCliente();
+                showMessage("Éxito", "Retiro de " + formatoMonto(monto) + " realizado con éxito.");
+            } catch (Exception e) {
+                showError("Por favor, ingrese un monto válido.");
+            }
+        }
     }
 
     private void accionTransferir() {
