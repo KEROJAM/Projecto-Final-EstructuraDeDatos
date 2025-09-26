@@ -10,6 +10,12 @@ import java.util.Objects;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.NumberFormat;
+import java.text.DecimalFormat;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.NumberFormatter;
+import java.text.ParseException;
+import java.util.Locale;
 
 public class BancoUI extends JFrame {
 
@@ -519,20 +525,71 @@ public class BancoUI extends JFrame {
             showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
             return;
         }
-        
-        String montoStr = JOptionPane.showInputDialog(this, "Ingrese el monto a depositar:", "Depósito", JOptionPane.PLAIN_MESSAGE);
-        try {
-            float monto = Float.parseFloat(montoStr);
-            if (monto <= 0) { showError("El monto debe ser positivo."); return; }
-            // MODIFICADO: Usa el historial del cliente
-            clienteSesion.Depositar(monto);
-            // MODIFICADO: Añade registro con fecha y hora
-            clienteSesion.getPilaHistorial().push(String.format("Deposito: +%s [%s]", formatoMonto(monto), getTimestamp()));
-            actualizarInfoCliente();
-            showMessage("Éxito", "Depósito de " + formatoMonto(monto) + " realizado con éxito.");
-        } catch (Exception e) { showError("Por favor, ingrese un número válido."); }
-    }
 
+        // Configurar el formato de número con comas
+        NumberFormat format = NumberFormat.getNumberInstance(Locale.US);
+        format.setGroupingUsed(true);
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(0);
+        
+        NumberFormatter formatter = new NumberFormatter(format) {
+            @Override
+            public Object stringToValue(String text) throws ParseException {
+                if (text == null || text.trim().isEmpty()) {
+                    return 0.0;
+                }
+                // Asegurarse de que el texto no termine con punto
+                text = text.trim();
+                if (text.endsWith(".")) {
+                    text = text.substring(0, text.length() - 1);
+                }
+                return super.stringToValue(text);
+            }
+        };
+        
+        formatter.setValueClass(Double.class);
+        formatter.setMinimum(0.0);
+        formatter.setAllowsInvalid(false);
+        formatter.setCommitsOnValidEdit(true);
+        
+        JFormattedTextField montoField = new JFormattedTextField(formatter);
+        montoField.setColumns(15);
+        montoField.setFont(FONT_BODY);
+        montoField.setValue(0.0);
+
+        // Panel para el diálogo
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.setBackground(COLOR_BACKGROUND);
+        panel.add(new JLabel("Ingrese el monto a depositar:"));
+        panel.add(montoField);
+        
+        // Mostrar el diálogo
+        int result = JOptionPane.showConfirmDialog(this, panel, "Depósito", 
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                // Obtener el valor y convertirlo a double
+                Number value = (Number) montoField.getValue();
+                double monto = value != null ? value.doubleValue() : 0.0;
+
+                if (monto <= 0) {
+                    showError("El monto debe ser positivo.");
+                    return;
+                }
+
+                // Realizar el depósito
+                clienteSesion.Depositar((float)monto);
+                clienteSesion.getPilaHistorial().push(
+                    String.format("Deposito: +%s [%s]", formatoMonto(monto), getTimestamp())
+                );
+                actualizarInfoCliente();
+                showMessage("Éxito", "Depósito de " + formatoMonto(monto) + " realizado con éxito.");
+            } catch (Exception e) {
+                showError("Por favor, ingrese un monto válido.");
+            }
+        }
+    }
     private void accionRetirar() {
         if (clienteSesion.isTarjetaBloqueada()) {
             showError("Operación no permitida. Su tarjeta está bloqueada por seguridad.\nContacte al banco para desbloquearla.");
