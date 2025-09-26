@@ -1238,19 +1238,98 @@ public class BancoUI extends JFrame {
             }
         });
         
-        // Botón para crear archivo CSV de ejemplo
-        JButton crearCSVButton = createStyledButton("Crear CSV de Ejemplo", COLOR_ACCENT, COLOR_TEXT_LIGHT);
-        crearCSVButton.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(dialog,
-                    "¿Deseas crear un archivo 'clientes.csv' de ejemplo en la carpeta 'src'?",
-                    "Crear Archivo de Ejemplo",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
-
+        // Botón para ver datos de clientes
+        JButton verClientesButton = createStyledButton("Ver Datos de Clientes", COLOR_ACCENT, COLOR_TEXT_LIGHT);
+        verClientesButton.addActionListener(e -> {
+            try {
+                // Crear un StringBuilder para construir el contenido a mostrar
+                StringBuilder contenido = new StringBuilder();
+                contenido.append("=== DATOS DE CLIENTES (ORDENADOS POR ID) ===\n\n");
+                
+                // Verificar si hay clientes en la tabla
+                if (clientesTable == null || clientesTable.size() == 0) {
+                    contenido.append("No hay clientes registrados en el sistema.\n");
+                } else {
+                    // Encabezados con ancho fijo
+                    String formatoEncabezado = "%-5s | %-25s | %-15s | %-15s | %-20s | %-10s%n";
+                    contenido.append(String.format(formatoEncabezado, 
+                            "ID", "NOMBRE", "SALDO", "AHORROS", "TARJETA", "ESTADO"));
+                    contenido.append("-".repeat(105)).append("\n");
+                    
+                    // Formato para los datos de los clientes
+                    String formatoDatos = "%-5d | %-25s | $%-14.2f | $%-14.2f | %-20s | %-10s%n";
+                    
+                    // Obtener la tabla interna de la clase HashTable usando reflexión
+                    try {
+                        java.lang.reflect.Field tableField = clientesTable.getClass().getDeclaredField("table");
+                        tableField.setAccessible(true);
+                        Object[] table = (Object[]) tableField.get(clientesTable);
+                        
+                        // Lista para almacenar temporalmente los clientes
+                        java.util.List<Cliente> listaClientes = new java.util.ArrayList<>();
+                        
+                        // Recopilar todos los clientes
+                        for (Object listObj : table) {
+                            if (listObj != null) {
+                                java.util.LinkedList<?> list = (java.util.LinkedList<?>) listObj;
+                                for (Object obj : list) {
+                                    if (obj instanceof Cliente) {
+                                        listaClientes.add((Cliente) obj);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Ordenar la lista de clientes por ID
+                        listaClientes.sort((c1, c2) -> Integer.compare(c1.ID, c2.ID));
+                        
+                        // Mostrar los clientes ordenados
+                        for (Cliente cliente : listaClientes) {
+                            String estado = cliente.tarjetaBloqueada ? "BLOQUEADA" : "ACTIVA";
+                            contenido.append(String.format(formatoDatos,
+                                    cliente.ID,
+                                    (cliente.Nombre.length() > 23 ? cliente.Nombre.substring(0, 20) + "..." : cliente.Nombre),
+                                    cliente.Monto,
+                                    cliente.montoAhorros,
+                                    cliente.NumeroTarjeta,
+                                    estado));
+                        }
+                        
+                        if (listaClientes.isEmpty()) {
+                            contenido.append("No se encontraron clientes en la base de datos.\n");
+                        }
+                        
+                    } catch (Exception ex) {
+                        contenido.append("Error al acceder a los datos de clientes.\n");
+                        ex.printStackTrace();
+                    }
+                }
+                
+                // Crear un JTextArea para mostrar el contenido
+                JTextArea textArea = new JTextArea(contenido.toString());
+                textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+                textArea.setEditable(false);
+                
+                // Agregar el JTextArea a un JScrollPane para permitir desplazamiento
+                JScrollPane scrollPane = new JScrollPane(textArea);
+                scrollPane.setPreferredSize(new Dimension(900, 300));
+                
+                // Mostrar el diálogo con los datos
+                JOptionPane.showMessageDialog(
+                    dialog,
+                    scrollPane,
+                    "Datos de Clientes (" + (clientesTable != null ? clientesTable.size() : 0) + " clientes)",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+                
+            } catch (Exception ex) {
+                showError("Error al mostrar los datos de clientes: " + ex.getMessage(), dialog);
+                ex.printStackTrace();
+            }
         });
         
         botonesPanel.add(desbloquearButton);
-        botonesPanel.add(crearCSVButton);
+        botonesPanel.add(verClientesButton);
         
         JButton cerrarButton = createStyledButton("Cerrar Sesión", COLOR_LOGOUT, COLOR_TEXT_LIGHT);
         cerrarButton.addActionListener(e -> {
