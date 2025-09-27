@@ -3,6 +3,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.ArrayList;
 import java.time.format.DateTimeFormatter;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -75,9 +77,7 @@ public class BancoUI extends JFrame {
     }
 
     /**
-     * Árbol Binario de Búsqueda para ordenar las transacciones por monto.
-     * Los montos negativos (retiros) se colocarán a la izquierda y los
-     * positivos (depósitos) a la derecha.
+     * Árbol binario para ordenar el historial por valor absoluto del monto en orden descendente.
      */
     private static class TransactionHistoryTree {
         private TransactionNode root;
@@ -90,19 +90,21 @@ public class BancoUI extends JFrame {
             if (current == null) {
                 return new TransactionNode(amount, description);
             }
-            if (amount < current.amount) {
+            // Comparar por valor absoluto en orden descendente
+            if (Math.abs(amount) > Math.abs(current.amount)) {
                 current.left = insertRec(current.left, amount, description);
-            } else { // Si los montos son iguales, se inserta a la derecha.
+            } else {
                 current.right = insertRec(current.right, amount, description);
             }
             return current;
         }
 
         public String getInOrderTraversal() {
-            StringBuilder sb = new StringBuilder("Movimientos ordenados de menor a mayor monto:\n---------------------------------------------\n");
+            StringBuilder sb = new StringBuilder();
             if (root == null) {
                 sb.append("No hay movimientos para ordenar.");
             } else {
+                // Usar recorrido en orden inverso (derecha-raíz-izquierda) para orden descendente
                 inOrderRec(root, sb);
             }
             return sb.toString();
@@ -110,13 +112,36 @@ public class BancoUI extends JFrame {
 
         private void inOrderRec(TransactionNode node, StringBuilder sb) {
             if (node != null) {
-                inOrderRec(node.left, sb);
-                sb.append(node.description).append("\n");
+                // Recorrido en orden inverso (derecha antes que izquierda) para orden descendente
                 inOrderRec(node.right, sb);
+                sb.append(node.description).append("\n");
+                inOrderRec(node.left, sb);
             }
         }
     }
 
+
+    /**
+     * Clase para almacenar la información de una transacción
+     */
+    private static class TransaccionInfo {
+        float monto;
+        String tipo;
+        String montoFormateado;
+        String fecha;
+        String hora;
+        String descripcion;
+
+        public TransaccionInfo(float monto, String tipo, String montoFormateado, 
+                             String fecha, String hora, String descripcion) {
+            this.monto = monto;
+            this.tipo = tipo;
+            this.montoFormateado = montoFormateado;
+            this.fecha = fecha;
+            this.hora = hora;
+            this.descripcion = descripcion;
+        }
+    }
 
     public BancoUI() {
         inicializarSistemaBancario();
@@ -453,17 +478,18 @@ public class BancoUI extends JFrame {
      * Construye un árbol binario con el historial para mostrarlo ordenado por monto.
      */
     private void mostrarHistorialPorMonto() {
-        TransactionHistoryTree sortedHistoryTree = new TransactionHistoryTree();
+        // Usamos una lista para ordenar las transacciones por monto absoluto descendente
+        List<TransaccionInfo> transacciones = new ArrayList<>();
         Stack<String> historialCopy = getHistoryElements(); // Obtiene una copia segura para consumir
         
         // Encabezados de la tabla
-        StringBuilder historialTexto = new StringBuilder("HISTORIAL DE MOVIMIENTOS (ORDENADO POR MONTO)\n");
-        String formatoEncabezado = "%-15s | %15s | %-12s | %-10s%n";
-        String formatoDatos = "%-15s | %15s | %-12s | %-10s%n";
-        String separador = "-".repeat(65) + "\n";
+        StringBuilder historialTexto = new StringBuilder("HISTORIAL DE MOVIMIENTOS (ORDENADO POR MONTO ABSOLUTO DESCENDENTE)\n");
+        String formatoEncabezado = "%-20s | %15s | %-12s | %-10s%n";
+        String formatoDatos = "%-20s | %15s | %-12s | %-10s%n";
+        String separador = "-".repeat(75) + "\n";
         
         try {
-            // Primera pasada: recolectar y analizar los datos
+            // Recolectar y analizar los datos
             while (!historialCopy.isEmpty()) {
                 String item = historialCopy.pop();
                 // Procesar todas las líneas que contengan un monto
@@ -475,83 +501,61 @@ public class BancoUI extends JFrame {
                         String montoStr = matcher.group(1).replace("$", "").replace(",", "");
                         float amount = Float.parseFloat(montoStr);
                         
-                        // Insertar en el árbol de búsqueda binaria
-                        sortedHistoryTree.insert(amount, item);
+                        // Extraer tipo de transacción
+                        String tipo = "";
+                        if (item.matches("(?i).*Dep[óo]sito.*")) {
+                            tipo = "Depósito";
+                        } else if (item.matches("(?i).*Retiro.*")) {
+                            tipo = "Retiro";
+                        } else if (item.matches("(?i).*Transferencia.*")) {
+                            tipo = item.matches("(?i).*a\\s+[^\\s]+.*") ? "Transferencia (Salida)" : "Transferencia (Entrada)";
+                        } else {
+                            continue; // Saltar si no es un tipo conocido
+                        }
+                        
+                        // Extraer fecha y hora
+                        String fecha = "";
+                        String hora = "";
+                        Matcher fechaHoraMatcher = Pattern.compile("\\[(.*?)\\s+(\\d{2}:\\d{2}:\\d{2})\\]").matcher(item);
+                        if (fechaHoraMatcher.find()) {
+                            fecha = fechaHoraMatcher.group(1);
+                            hora = fechaHoraMatcher.group(2);
+                        }
+                        
+                        // Agregar a la lista para ordenar
+                        transacciones.add(new TransaccionInfo(amount, tipo, montoStr, fecha, hora, item));
                     }
                 }
             }
+            
+            // Ordenar por valor absoluto del monto en orden descendente
+            transacciones.sort((t1, t2) -> Float.compare(Math.abs(t2.monto), Math.abs(t1.monto)));
             
             // Construir la tabla con los datos ordenados
             historialTexto.append(separador);
             historialTexto.append(String.format(formatoEncabezado, "TIPO", "MONTO", "FECHA", "HORA"));
             historialTexto.append(separador);
             
-            // Obtener el recorrido en orden del árbol (ordenado por monto)
-            String inOrder = sortedHistoryTree.getInOrderTraversal();
-            if (inOrder.contains("No hay movimientos")) {
+            if (transacciones.isEmpty()) {
                 historialTexto.append("No hay movimientos para mostrar.\n");
             } else {
-                String[] lineas = inOrder.split("\n");
                 int contadorMovimientos = 0;
                 
-                // Patrón para extraer fecha y hora [2025-Sep-26 12:34:56]
-                Pattern fechaHoraPattern = Pattern.compile("\\[(.*?)\s+(\\d{2}:\\d{2}:\\d{2})\\]");
-                
-                // Procesar cada línea del historial ordenado
-                for (String linea : lineas) {
+                // Procesar cada transacción ordenada por monto absoluto descendente
+                for (TransaccionInfo transaccion : transacciones) {
                     try {
-                        if (linea.trim().isEmpty()) continue;
-                        
-                        // Extraer monto
-                        String montoFormateado = "";
-                        String tipo = "";
-                        String fecha = "";
-                        String hora = "";
-                        
-                        // Determinar tipo de transacción
-                        if (linea.matches("(?i).*Dep[óo]sito.*")) {
-                            tipo = "Depósito";
-                        } else if (linea.matches("(?i).*Retiro.*")) {
-                            tipo = "Retiro";
-                        } else if (linea.matches("(?i).*Transferencia.*")) {
-                            tipo = linea.matches("(?i).*a\\s+[^\\s]+.*") ? "Transferencia (Salida)" : "Transferencia (Entrada)";
-                        } else {
-                            // Si no es un tipo conocido, saltar esta línea
-                            continue;
-                        }
-                        
-                        // Extraer monto numérico
-                        Matcher montoMatcher = Pattern.compile("([+-]?\\$[\\d,]+(?:\\.\\d{1,2})?)").matcher(linea);
-                        if (montoMatcher.find()) {
-                            montoFormateado = montoMatcher.group(1);
-                        } else {
-                            // Si no se encuentra un monto, saltar esta línea
-                            continue;
-                        }
-                        
-                        // Extraer fecha y hora
-                        Matcher fechaHoraMatcher = fechaHoraPattern.matcher(linea);
-                        if (fechaHoraMatcher.find()) {
-                            fecha = fechaHoraMatcher.group(1);
-                            hora = fechaHoraMatcher.group(2);
-                        } else {
-                            // Si no se encuentra fecha y hora, usar valores por defecto
-                            fecha = "--/--/----";
-                            hora = "--:--:--";
-                        }
-                        
                         // Agregar a la tabla
                         historialTexto.append(String.format(formatoDatos,
-                            tipo,
-                            montoFormateado,
-                            fecha,
-                            hora
+                            transaccion.tipo,
+                            transaccion.montoFormateado,
+                            transaccion.fecha,
+                            transaccion.hora
                         ));
                         
                         contadorMovimientos++;
                         
                     } catch (Exception e) {
-                        System.err.println("Error al procesar línea: " + linea);
+                        System.err.println("Error al procesar transacción: " + transaccion.descripcion);
                     }
                 }
                 

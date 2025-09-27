@@ -95,7 +95,6 @@ public class Cliente {
         }
         
         this.Monto -= monto;
-        this.pilaHistorial.push("Transferencia de $" + monto);
         return this.posibleFraude;
     }
 
