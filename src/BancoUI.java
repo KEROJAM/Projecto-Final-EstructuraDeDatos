@@ -1752,7 +1752,8 @@ public class BancoUI extends JFrame {
                     contenido.append("-".repeat(105)).append("\n");
                     
                     // Formato para los datos de los clientes
-                    String formatoDatos = "%-5d | %-25s | $%-14.2f | $%-14.2f | %-20s | %-10s%n";
+                    // Ajustado para alinear montos a la derecha con formato de moneda
+                    String formatoDatos = "%-5d | %-25s | %15s | %15s | %-20s | %-10s%n";
                     
                     // Obtener la tabla interna de la clase HashTable usando reflexión
                     try {
@@ -1781,11 +1782,15 @@ public class BancoUI extends JFrame {
                         // Mostrar los clientes ordenados
                         for (Cliente cliente : listaClientes) {
                             String estado = cliente.tarjetaBloqueada ? "BLOQUEADA" : "ACTIVA";
+                            // Formatear montos con símbolo de moneda y alineación a la derecha
+                            String saldoFormateado = String.format("$%,.2f", cliente.Monto);
+                            String ahorrosFormateado = String.format("$%,.2f", cliente.montoAhorros);
+                            
                             contenido.append(String.format(formatoDatos,
                                     cliente.ID,
                                     (cliente.Nombre.length() > 23 ? cliente.Nombre.substring(0, 20) + "..." : cliente.Nombre),
-                                    cliente.Monto,
-                                    cliente.montoAhorros,
+                                    saldoFormateado,
+                                    ahorrosFormateado,
                                     cliente.NumeroTarjeta,
                                     estado));
                         }
