@@ -384,39 +384,125 @@ public class BancoUI extends JFrame {
     private void mostrarHistorialPorMonto() {
         TransactionHistoryTree sortedHistoryTree = new TransactionHistoryTree();
         Stack<String> historialCopy = getHistoryElements(); // Obtiene una copia segura para consumir
-
-        // Expresión regular para encontrar montos con signo y posible sufijo MXN, ej: +$1,000.50 MXN, -$50
-        Pattern pattern = Pattern.compile("([+-])\\$([\\d,]+(?:\\.\\d{1,2})?)(?:\\s*MXN)?");
-
+        
+        // Encabezados de la tabla
+        StringBuilder historialTexto = new StringBuilder("HISTORIAL DE MOVIMIENTOS (ORDENADO POR MONTO)\n");
+        String formatoEncabezado = "%-15s | %15s | %-12s | %-10s%n";
+        String formatoDatos = "%-15s | %15s | %-12s | %-10s%n";
+        String separador = "-".repeat(65) + "\n";
+        
         try {
+            // Primera pasada: recolectar y analizar los datos
             while (!historialCopy.isEmpty()) {
-                String item = historialCopy.peek();
-                Matcher matcher = pattern.matcher(item);
-                if (matcher.find()) {
-                    String sign = matcher.group(1);
-                    String amountStr = matcher.group(2).replace(",", "");
-                    int amount = (int)Math.round(Double.parseDouble(amountStr));
-                    if ("-".equals(sign)) {
-                        amount *= -1; // Convertir retiros a números negativos para la ordenación
+                String item = historialCopy.pop();
+                // Procesar todas las líneas que contengan un monto
+                if (item.matches(".*\\$[\\d,]+.*")) {
+                    // Extraer el monto numérico
+                    Pattern pattern = Pattern.compile("([+-]?\\$[\\d,]+(?:\\.\\d{1,2})?)");
+                    Matcher matcher = pattern.matcher(item);
+                    if (matcher.find()) {
+                        String montoStr = matcher.group(1).replace("$", "").replace(",", "");
+                        float amount = Float.parseFloat(montoStr);
+                        
+                        // Insertar en el árbol de búsqueda binaria
+                        sortedHistoryTree.insert(amount, item);
                     }
-                    sortedHistoryTree.insert(amount, item);
                 }
-                historialCopy.pop();
+            }
+            
+            // Construir la tabla con los datos ordenados
+            historialTexto.append(separador);
+            historialTexto.append(String.format(formatoEncabezado, "TIPO", "MONTO", "FECHA", "HORA"));
+            historialTexto.append(separador);
+            
+            // Obtener el recorrido en orden del árbol (ordenado por monto)
+            String inOrder = sortedHistoryTree.getInOrderTraversal();
+            if (inOrder.contains("No hay movimientos")) {
+                historialTexto.append("No hay movimientos para mostrar.\n");
+            } else {
+                String[] lineas = inOrder.split("\n");
+                int contadorMovimientos = 0;
+                
+                // Patrón para extraer fecha y hora [2025-Sep-26 12:34:56]
+                Pattern fechaHoraPattern = Pattern.compile("\\[(.*?)\s+(\\d{2}:\\d{2}:\\d{2})\\]");
+                
+                // Procesar cada línea del historial ordenado
+                for (String linea : lineas) {
+                    try {
+                        if (linea.trim().isEmpty()) continue;
+                        
+                        // Extraer monto
+                        String montoFormateado = "";
+                        String tipo = "";
+                        String fecha = "";
+                        String hora = "";
+                        
+                        // Determinar tipo de transacción
+                        if (linea.matches("(?i).*Dep[óo]sito.*")) {
+                            tipo = "Depósito";
+                        } else if (linea.matches("(?i).*Retiro.*")) {
+                            tipo = "Retiro";
+                        } else if (linea.matches("(?i).*Transferencia.*")) {
+                            tipo = linea.matches("(?i).*a\\s+[^\\s]+.*") ? "Transferencia (Salida)" : "Transferencia (Entrada)";
+                        } else {
+                            // Si no es un tipo conocido, saltar esta línea
+                            continue;
+                        }
+                        
+                        // Extraer monto numérico
+                        Matcher montoMatcher = Pattern.compile("([+-]?\\$[\\d,]+(?:\\.\\d{1,2})?)").matcher(linea);
+                        if (montoMatcher.find()) {
+                            montoFormateado = montoMatcher.group(1);
+                        } else {
+                            // Si no se encuentra un monto, saltar esta línea
+                            continue;
+                        }
+                        
+                        // Extraer fecha y hora
+                        Matcher fechaHoraMatcher = fechaHoraPattern.matcher(linea);
+                        if (fechaHoraMatcher.find()) {
+                            fecha = fechaHoraMatcher.group(1);
+                            hora = fechaHoraMatcher.group(2);
+                        } else {
+                            // Si no se encuentra fecha y hora, usar valores por defecto
+                            fecha = "--/--/----";
+                            hora = "--:--:--";
+                        }
+                        
+                        // Agregar a la tabla
+                        historialTexto.append(String.format(formatoDatos,
+                            tipo,
+                            montoFormateado,
+                            fecha,
+                            hora
+                        ));
+                        
+                        contadorMovimientos++;
+                        
+                    } catch (Exception e) {
+                        System.err.println("Error al procesar línea: " + linea);
+                    }
+                }
+                
+                historialTexto.append(separador);
+                historialTexto.append(String.format("Total de movimientos: %d%n", contadorMovimientos));
             }
         } catch (Exception e) {
-            showError("Ocurrió un error al construir el árbol de historial.");
+            historialTexto.append("\nError al procesar el historial: ").append(e.getMessage());
             System.err.println("Error en mostrarHistorialPorMonto: " + e.getMessage());
-            return;
+            e.printStackTrace();
         }
-
-        String sortedHistorial = sortedHistoryTree.getInOrderTraversal();
-
-        JTextArea textArea = new JTextArea(sortedHistorial);
-        textArea.setFont(FONT_BODY);
+        
+        // Mostrar el historial en un diálogo
+        JTextArea textArea = new JTextArea(historialTexto.toString());
+        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
         textArea.setEditable(false);
         textArea.setBackground(COLOR_BACKGROUND);
+        textArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(500, 350));
+        scrollPane.setPreferredSize(new Dimension(700, 400));
+        
         JOptionPane.showMessageDialog(this, scrollPane, "Historial de Movimientos (Ordenado por Monto)", JOptionPane.PLAIN_MESSAGE);
     }
 
