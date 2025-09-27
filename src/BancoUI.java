@@ -528,8 +528,26 @@ public class BancoUI extends JFrame {
                 }
             }
             
-            // Ordenar por valor absoluto del monto en orden descendente
-            transacciones.sort((t1, t2) -> Float.compare(Math.abs(t2.monto), Math.abs(t1.monto)));
+            // Ordenar por valor real primero (de mayor a menor)
+            // Si los valores son iguales, usar el valor absoluto como desempate
+            transacciones.sort((t1, t2) -> {
+                // Primero comparar por valor real
+                int comparacion = Float.compare(t2.monto, t1.monto);
+                
+                // Si los valores son iguales (mismo número, uno positivo y otro negativo)
+                // el positivo debe ir primero
+                if (comparacion == 0) {
+                    return Float.compare(t2.monto, t1.monto);
+                }
+                
+                // Si los valores tienen el mismo signo, mantener el orden normal
+                if ((t1.monto >= 0 && t2.monto >= 0) || (t1.monto < 0 && t2.monto < 0)) {
+                    return comparacion;
+                }
+                
+                // Si tienen signos diferentes, el mayor va primero
+                return comparacion;
+            });
             
             // Construir la tabla con los datos ordenados
             historialTexto.append(separador);
