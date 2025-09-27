@@ -347,34 +347,105 @@ public class BancoUI extends JFrame {
     }
 
     /**
-     * Muestra el historial en orden cronológico (más reciente primero), consumiendo una copia de la pila.
+     * Muestra el historial en orden cronológico (más reciente primero) con formato de tabla.
      */
     private void mostrarHistorialCronologico() {
-        StringBuilder historialTexto = new StringBuilder("Últimos movimientos (Más recientes primero):\n---------------------------------------------\n");
         Stack<String> historialCopy = getHistoryElements(); // Obtiene una copia segura para consumir
-
-        int contador = 1;
+        
+        // Encabezados de la tabla
+        StringBuilder historialTexto = new StringBuilder("HISTORIAL DE MOVIMIENTOS (CRONOLÓGICO - MÁS RECIENTES PRIMERO)\n");
+        String formatoEncabezado = "%-15s | %15s | %-12s | %-10s%n";
+        String formatoDatos = "%-15s | %15s | %-12s | %-10s%n";
+        String separador = "-".repeat(65) + "\n";
+        
+        historialTexto.append(separador);
+        historialTexto.append(String.format(formatoEncabezado, "TIPO", "MONTO", "FECHA", "HORA"));
+        historialTexto.append(separador);
+        
+        int contadorMovimientos = 0;
+        
         try {
+            // Procesar cada elemento del historial (ya están en orden cronológico inverso en la pila)
             while (!historialCopy.isEmpty()) {
-                historialTexto.append(contador).append(". ").append(historialCopy.peek()).append("\n");
-                historialCopy.pop();
-                contador++;
+                String item = historialCopy.pop();
+                
+                try {
+                    // Extraer monto
+                    String montoFormateado = "";
+                    String tipo = "";
+                    String fecha = "";
+                    String hora = "";
+                    
+                    // Determinar tipo de transacción
+                    if (item.matches("(?i).*Dep[óo]sito.*")) {
+                        tipo = "Depósito";
+                    } else if (item.matches("(?i).*Retiro.*")) {
+                        tipo = "Retiro";
+                    } else if (item.matches("(?i).*Transferencia.*")) {
+                        tipo = item.matches("(?i).*a\\s+[^\\s]+.*") ? "Transferencia (Salida)" : "Transferencia (Entrada)";
+                    } else {
+                        // Si no es un tipo conocido, saltar esta línea
+                        continue;
+                    }
+                    
+                    // Extraer monto numérico
+                    Matcher montoMatcher = Pattern.compile("([+-]?\\$[\\d,]+(?:\\.\\d{1,2})?)").matcher(item);
+                    if (montoMatcher.find()) {
+                        montoFormateado = montoMatcher.group(1);
+                    } else {
+                        // Si no se encuentra un monto, saltar esta línea
+                        continue;
+                    }
+                    
+                    // Extraer fecha y hora [2025-Sep-26 12:34:56]
+                    Matcher fechaHoraMatcher = Pattern.compile("\\[(.*?)\s+(\\d{2}:\\d{2}:\\d{2})\\]").matcher(item);
+                    if (fechaHoraMatcher.find()) {
+                        fecha = fechaHoraMatcher.group(1);
+                        hora = fechaHoraMatcher.group(2);
+                    } else {
+                        // Si no se encuentra fecha y hora, usar valores por defecto
+                        fecha = "--/--/----";
+                        hora = "--:--:--";
+                    }
+                    
+                    // Agregar a la tabla
+                    historialTexto.append(String.format(formatoDatos,
+                        tipo,
+                        montoFormateado,
+                        fecha,
+                        hora
+                    ));
+                    
+                    contadorMovimientos++;
+                    
+                } catch (Exception e) {
+                    System.err.println("Error al procesar línea: " + item);
+                }
             }
+            
+            historialTexto.append(separador);
+            historialTexto.append(String.format("Total de movimientos: %d%n", contadorMovimientos));
+            
+            if (contadorMovimientos == 0) {
+                historialTexto = new StringBuilder("No hay movimientos para mostrar.\n");
+            }
+            
         } catch (Exception e) {
-            historialTexto.append("\nError al procesar el historial.");
+            historialTexto.append("\nError al procesar el historial: ").append(e.getMessage());
             System.err.println("Error en mostrarHistorialCronologico: " + e.getMessage());
+            e.printStackTrace();
         }
-
-        if (contador == 1) { // Si el bucle nunca se ejecutó
-            historialTexto.append("No hay historial de transacciones.");
-        }
-
+        
+        // Mostrar el historial en un diálogo
         JTextArea textArea = new JTextArea(historialTexto.toString());
-        textArea.setFont(FONT_BODY);
+        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
         textArea.setEditable(false);
         textArea.setBackground(COLOR_BACKGROUND);
+        textArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(500, 350));
+        scrollPane.setPreferredSize(new Dimension(700, 400));
+        
         JOptionPane.showMessageDialog(this, scrollPane, "Historial de Movimientos (Cronológico)", JOptionPane.PLAIN_MESSAGE);
     }
 
