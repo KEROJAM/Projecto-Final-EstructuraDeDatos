@@ -74,7 +74,7 @@ public class CSVClientLoader {
             }
 
             // CORRECCIÓN: Se añade cliente.MontoAhorros para guardar los 7 campos
-            writer.printf("%d,%s,%d,%d,%s,%s,%b\n",
+            writer.printf("%d,%s,%f,%f,%s,%s,%b\n",
                     cliente.ID,
                     cliente.Nombre,
                     cliente.Monto,

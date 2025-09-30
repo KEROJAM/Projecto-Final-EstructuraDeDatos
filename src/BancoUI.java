@@ -423,7 +423,7 @@ public class BancoUI extends JFrame {
                     }
                     
                     // Extraer fecha y hora [2025-Sep-26 12:34:56]
-                    Matcher fechaHoraMatcher = Pattern.compile("\\[(.*?)\s+(\\d{2}:\\d{2}:\\d{2})\\]").matcher(item);
+                    Matcher fechaHoraMatcher = Pattern.compile("\\[(.*?)\\s+(\\d{2}:\\d{2}:\\d{2})\\]").matcher(item);
                     if (fechaHoraMatcher.find()) {
                         fecha = fechaHoraMatcher.group(1);
                         hora = fechaHoraMatcher.group(2);
@@ -1055,7 +1055,7 @@ public class BancoUI extends JFrame {
 
         JLabel ahorrosActualLabel = new JLabel(String.format("Saldo Ahorrado: %s", formatoMonto(clienteSesion.montoAhorros)), SwingConstants.CENTER);
         ahorrosActualLabel.setFont(FONT_HEADER);
-        ahorrosActualLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        ahorrosActualLabel.setBorder(new EmptyBorder(10, 10, 20, 10));
 
         JPanel botonesPanel = new JPanel(new GridLayout(4, 1, 10, 10)); // Cambié a 4 filas
         botonesPanel.setBackground(COLOR_BACKGROUND);
@@ -1555,12 +1555,31 @@ public class BancoUI extends JFrame {
     }
 
     private void cerrarSesion() {
+        if (clienteSesion != null) {
+            // Guardar todos los clientes en el CSV antes de cerrar sesión
+            guardarTodosLosClientes();
+        }
         clienteSesion = null;
         loginTarjetaField.setText("");
         loginPasswordField.setText("");
         cardLayout.show(mainPanel, "Initial");
     }
 
+    /**
+     * Guarda todos los clientes de la tabla hash al archivo CSV
+     */
+    private void guardarTodosLosClientes() {
+        // Primero, eliminar el archivo existente para evitar duplicados
+        File archivo = new File(RUTA_CSV);
+        if (archivo.exists()) {
+            archivo.delete();
+        }
+        
+        // Obtener todos los clientes de la tabla hash y guardarlos
+        for (Cliente cliente : clientesTable.getAllValues()) {
+            CSVClientLoader.guardarCliente(cliente, RUTA_CSV);
+        }
+    }
     private void actualizarInfoCliente() {
         if (clienteSesion != null) {
             clienteLabel.setText("Cliente: " + clienteSesion.Nombre);
@@ -1705,7 +1724,7 @@ public class BancoUI extends JFrame {
         JLabel tituloLabel = new JLabel("Bienvenido, " + empleadoSesion.getUsuario(), SwingConstants.CENTER);
         tituloLabel.setFont(FONT_HEADER);
         tituloLabel.setBorder(new EmptyBorder(10, 10, 20, 10));
-        
+
         JPanel botonesPanel = new JPanel(new GridLayout(2, 1, 10, 10));
         botonesPanel.setBackground(COLOR_BACKGROUND);
         botonesPanel.setBorder(new EmptyBorder(10, 20, 20, 20));

@@ -1,5 +1,6 @@
 // Archivo: HashTable.java (simplificado)
 import java.util.LinkedList;
+import java.util.List;
 
 public class HashTable {
     private LinkedList<Cliente>[] table;
@@ -56,4 +57,15 @@ public class HashTable {
         return size;
     }
 
+    /**
+     * Obtiene todos los clientes almacenados en la tabla hash
+     * @return Lista con todos los clientes
+     */
+    public List<Cliente> getAllValues() {
+        List<Cliente> allClients = new java.util.ArrayList<>();
+        for (LinkedList<Cliente> list : table) {
+            allClients.addAll(list);
+        }
+        return allClients;
+    }
 }
