@@ -208,7 +208,7 @@ public class BancoUI extends JFrame {
     private void crearInitialPanel() {
         initialPanel = new JPanel(new GridBagLayout());
         initialPanel.setBackground(COLOR_BACKGROUND);
-        initialPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
+        initialPanel.setBorder(new EmptyBorder(150, 150, 150, 150));
         GridBagConstraints gbc = new GridBagConstraints();
 
         JLabel titleLabel = new JLabel("Bienvenido al BancoUI");

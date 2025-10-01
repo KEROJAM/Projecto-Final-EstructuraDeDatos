@@ -33,8 +33,8 @@ public class CSVClientLoader {
                     try {
                         int id = Integer.parseInt(datos[0].trim());
                         String nombre = datos[1].trim();
-                        int monto = Integer.parseInt(datos[2].trim());
-                        int montoAhorros = Integer.parseInt(datos[3].trim()); // Nuevo campo leído
+                        float monto = Float.parseFloat(datos[2].trim());
+                        float montoAhorros = Float.parseFloat(datos[3].trim()); // Nuevo campo leído
                         String numeroTarjeta = datos[4].trim();
                         String contrasena = datos[5].trim();
                         Boolean tarjetaBloqueada = Boolean.parseBoolean(datos[6].trim());
@@ -74,7 +74,7 @@ public class CSVClientLoader {
             }
 
             // CORRECCIÓN: Se añade cliente.MontoAhorros para guardar los 7 campos
-            writer.printf("%d,%s,%f,%f,%s,%s,%b\n",
+            writer.printf("%d,%s,%.2f,%.2f,%s,%s,%b\n",
                     cliente.ID,
                     cliente.Nombre,
                     cliente.Monto,

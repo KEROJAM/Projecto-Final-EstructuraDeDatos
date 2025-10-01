@@ -1,11 +1,11 @@
 ID,Nombre,Monto,MontoAhorros,NumeroTarjeta,password,TarjetaBloqueada
-1,María García López,15750,0,5201169781530257,Maria123,false
-2,Carlos Rodríguez Pérez,8920,0,4509297861614535,Carlos456,false
-3,Ana Martínez Sánchez,22100,0,4555061037596247,Ana789,false
-4,Luis Hernández Torres,3450,0,4915762317479773,Luis123,false
-5,Carmen Jiménez Ruiz,12680,0,5161034964107141,Carmen456,false
-6,Roberto Silva Morales,7890,0,4509299398524443,Roberto789,false
-7,Elena Vargas Castro,18925,0,4509298070497977,Elena123,false
-8,Diego Ramírez Ortega,5670,0,4509296647435728,Diego456,false
-9,Patricia Flores Medina,31240,0,4509292897931771,Patricia789,false
-10,Andrés Mendoza Valle,9840,0,4509292651058951,Andres123,false
+1,María García López,22410.39,0.00,5201169781530257,Maria123,false
+10,Andrés Mendoza Valle,9840.00,0.00,4509292651058951,Andres123,false
+6,Roberto Silva Morales,7890.00,0.00,4509299398524443,Roberto789,false
+8,Diego Ramírez Ortega,5670.00,0.00,4509296647435728,Diego456,false
+7,Elena Vargas Castro,18925.00,0.00,509298070497977,Elena123,false
+4,Luis Hernández Torres,3450.00,0.00,4915762317479773,Luis123,false
+2,Carlos Rodríguez Pérez,8920.00,0.00,4509297861614535,Carlos456,false
+9,Patricia Flores Medina,31240.00,0.00,4509292897931771,Patricia789,false
+5,Carmen Jiménez Ruiz,12680.00,0.00,5161034964107141,Carmen456,false
+3,Ana Martínez Sánchez,22100.00,0.00,4555061037596247,Ana789,false

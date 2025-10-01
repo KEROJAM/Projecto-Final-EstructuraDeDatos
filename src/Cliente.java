@@ -27,7 +27,7 @@ public class Cliente {
 
     // EN TU CLASE Cliente.java
 // En Cliente.java - Asegurar que el constructor tenga 7 parámetros
-    public Cliente(int id, String nombre, int monto, int montoAhorros, String numeroTarjeta, String contrasena, Boolean tarjetaBloqueada) {
+    public Cliente(int id, String nombre, float monto, float montoAhorros, String numeroTarjeta, String contrasena, Boolean tarjetaBloqueada) {
         this.ID = id;
         this.Nombre = nombre;
         this.Monto = monto;
