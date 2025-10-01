@@ -146,7 +146,7 @@ public class BancoUI extends JFrame {
     public BancoUI() {
         inicializarSistemaBancario();
         applyGlobalUIStyles();
-        setTitle("Banco Financiero GUI");
+        setTitle("Banco UI");
         setSize(550, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
