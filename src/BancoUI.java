@@ -211,7 +211,7 @@ public class BancoUI extends JFrame {
         initialPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
         GridBagConstraints gbc = new GridBagConstraints();
 
-        JLabel titleLabel = new JLabel("Bienvenido al Banco Financiero");
+        JLabel titleLabel = new JLabel("Bienvenido al BancoUI");
         titleLabel.setFont(FONT_TITLE);
         titleLabel.setForeground(COLOR_TEXT_DARK);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
